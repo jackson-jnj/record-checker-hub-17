@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, AtSign, Lock, Eye, EyeOff } from "lucide-react";
+import { Shield, AtSign, Lock, Eye, EyeOff, ChevronLeft } from "lucide-react";
+import { motion } from "framer-motion";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -67,19 +68,59 @@ const LoginPage = () => {
     setError("Signup feature is not implemented in this demo. Please use login.");
   };
 
+  const goBack = () => {
+    navigate(-1);
+  };
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 }
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-police-dark to-police-medium py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-xl">
-        <div className="text-center">
-          <div className="flex justify-center">
+      <motion.div 
+        className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-xl"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <div className="text-center relative">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={goBack}
+            className="absolute left-0 top-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="h-5 w-5 text-gray-600" />
+          </motion.button>
+          
+          <motion.div className="flex justify-center" variants={itemVariants}>
             <Shield className="h-12 w-12 text-police-dark" />
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-police-dark">
+          </motion.div>
+          <motion.h2 className="mt-6 text-3xl font-extrabold text-police-dark" variants={itemVariants}>
             Welcome Back
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          </motion.h2>
+          <motion.p className="mt-2 text-sm text-gray-600" variants={itemVariants}>
             Enter your credentials to access your account
-          </p>
+          </motion.p>
         </div>
         
         <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -91,13 +132,17 @@ const LoginPage = () => {
           <TabsContent value="login">
             <form className="mt-8 space-y-6" onSubmit={handleLogin}>
               {error && (
-                <div className="bg-red-50 p-4 rounded-md border border-red-200 text-red-600 text-sm">
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-50 p-4 rounded-md border border-red-200 text-red-600 text-sm"
+                >
                   {error}
-                </div>
+                </motion.div>
               )}
               
               <div className="space-y-4">
-                <div className="space-y-1">
+                <motion.div className="space-y-1" variants={itemVariants}>
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -114,9 +159,9 @@ const LoginPage = () => {
                       required 
                     />
                   </div>
-                </div>
+                </motion.div>
                 
-                <div className="space-y-1">
+                <motion.div className="space-y-1" variants={itemVariants}>
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
                     <button 
@@ -148,10 +193,10 @@ const LoginPage = () => {
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                </div>
+                </motion.div>
               </div>
 
-              <div>
+              <motion.div variants={itemVariants}>
                 <Button
                   type="submit"
                   className="w-full bg-police-dark hover:bg-police-medium"
@@ -159,9 +204,12 @@ const LoginPage = () => {
                 >
                   {isLoading ? "Signing in..." : "Sign in"}
                 </Button>
-              </div>
+              </motion.div>
               
-              <div className="text-center text-sm">
+              <motion.div 
+                className="text-center text-sm"
+                variants={itemVariants}
+              >
                 <p className="text-gray-500">
                   Demo credentials:
                 </p>
@@ -177,20 +225,39 @@ const LoginPage = () => {
                     <div>password</div>
                   </div>
                 </div>
-              </div>
+                <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                  <div className="border rounded p-2">
+                    <div className="font-semibold">Officer</div>
+                    <div>officer@example.com</div>
+                    <div>password</div>
+                  </div>
+                  <div className="border rounded p-2">
+                    <div className="font-semibold">Verifier</div>
+                    <div>verifier@example.com</div>
+                    <div>password</div>
+                  </div>
+                </div>
+              </motion.div>
             </form>
           </TabsContent>
           
           <TabsContent value="signup">
             <form className="mt-8 space-y-6" onSubmit={handleSignup}>
               {error && (
-                <div className="bg-red-50 p-4 rounded-md border border-red-200 text-red-600 text-sm">
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-50 p-4 rounded-md border border-red-200 text-red-600 text-sm"
+                >
                   {error}
-                </div>
+                </motion.div>
               )}
               
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <motion.div 
+                  className="grid grid-cols-2 gap-4"
+                  variants={itemVariants}
+                >
                   <div className="space-y-1">
                     <Label htmlFor="firstName">First Name</Label>
                     <Input id="firstName" name="firstName" placeholder="John" />
@@ -199,9 +266,9 @@ const LoginPage = () => {
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input id="lastName" name="lastName" placeholder="Doe" />
                   </div>
-                </div>
+                </motion.div>
                 
-                <div className="space-y-1">
+                <motion.div className="space-y-1" variants={itemVariants}>
                   <Label htmlFor="signupEmail">Email</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -216,9 +283,18 @@ const LoginPage = () => {
                       required 
                     />
                   </div>
-                </div>
+                </motion.div>
                 
-                <div className="space-y-1">
+                <motion.div className="space-y-1" variants={itemVariants}>
+                  <Label htmlFor="nrc">NRC (National Registration Card)</Label>
+                  <Input 
+                    id="nrc" 
+                    name="nrc" 
+                    placeholder="999999/99/1" 
+                  />
+                </motion.div>
+                
+                <motion.div className="space-y-1" variants={itemVariants}>
                   <Label htmlFor="signupPassword">Password</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -233,9 +309,9 @@ const LoginPage = () => {
                       required 
                     />
                   </div>
-                </div>
+                </motion.div>
                 
-                <div className="space-y-1">
+                <motion.div className="space-y-1" variants={itemVariants}>
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -250,19 +326,22 @@ const LoginPage = () => {
                       required 
                     />
                   </div>
-                </div>
+                </motion.div>
               </div>
 
-              <div>
+              <motion.div variants={itemVariants}>
                 <Button type="submit" className="w-full bg-police-dark hover:bg-police-medium">
                   Create Account
                 </Button>
-              </div>
+              </motion.div>
             </form>
           </TabsContent>
         </Tabs>
         
-        <div className="mt-4 text-center text-sm">
+        <motion.div 
+          className="mt-4 text-center text-sm"
+          variants={itemVariants}
+        >
           <p className="text-gray-600">
             By using this service, you agree to our{" "}
             <a href="#" className="font-medium text-police-accent hover:text-police-accent/80">
@@ -273,8 +352,8 @@ const LoginPage = () => {
               Privacy Policy
             </a>
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
