@@ -37,6 +37,7 @@ import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { Application, ApplicationStatus } from "@/types";
 import { toast } from "@/hooks/use-toast";
+import { DateRange } from "react-day-picker";
 
 const mockApplicationData = [
   { month: 'Jan', standard: 65, enhanced: 40, vulnerable: 24 },
@@ -64,7 +65,7 @@ const completionTimeData = [
 const ReportsPage = () => {
   const { hasRole } = useAuth();
   const [reportType, setReportType] = useState("applications");
-  const [dateRange, setDateRange] = useState<{ from: Date, to: Date }>({ 
+  const [dateRange, setDateRange] = useState<DateRange>({ 
     from: new Date(new Date().setMonth(new Date().getMonth() - 6)), 
     to: new Date() 
   });
@@ -81,6 +82,12 @@ const ReportsPage = () => {
       title: "Report Exported",
       description: `Report has been exported as ${format.toUpperCase()} file.`,
     });
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    if (range) {
+      setDateRange(range);
+    }
   };
 
   if (!hasRole("administrator")) {
@@ -164,10 +171,10 @@ const ReportsPage = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Application Trends</CardTitle>
-                <DateRangePicker onChange={setDateRange} />
+                <DateRangePicker value={dateRange} onChange={handleDateRangeChange} />
               </div>
               <CardDescription>
-                Number of applications submitted from {dateRange.from.toLocaleDateString()} to {dateRange.to.toLocaleDateString()}
+                Number of applications submitted from {dateRange.from?.toLocaleDateString() || ''} to {dateRange.to?.toLocaleDateString() || ''}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-2">
