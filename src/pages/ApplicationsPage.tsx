@@ -8,7 +8,6 @@ import {
   Select, 
   SelectContent, 
   SelectItem,
-
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
@@ -16,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import StatusBadge from "@/components/StatusBadge";
-import { ApplicationStatus } from "@/types";
+import { Application, ApplicationStatus } from "@/types";
 import { FilePlus, Search } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 
@@ -96,7 +95,7 @@ const ApplicationsPage = () => {
               
               <Select 
                 value={statusFilter} 
-                onValueChange={(value: string) => setStatusFilter(value as ApplicationStatus | "all")}
+                onValueChange={(value) => setStatusFilter(value as ApplicationStatus | "all")}
               >
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Status" />
