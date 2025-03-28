@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
@@ -27,12 +26,10 @@ const ApplicationsPage = () => {
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "all">("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   
-  // Get applications based on user role
   const userApplications = hasRole("applicant") 
     ? mockApplications.filter(app => app.applicantId === user?.id)
     : mockApplications;
   
-  // Apply filters
   const filteredApplications = userApplications.filter(app => {
     const matchesSearch = 
       app.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -44,7 +41,6 @@ const ApplicationsPage = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
   
-  // Count by status for tabs
   const pendingCount = userApplications.filter(app => app.status === "pending").length;
   const processingCount = userApplications.filter(app => app.status === "processing").length;
   const approvedCount = userApplications.filter(app => app.status === "approved").length;
@@ -75,7 +71,6 @@ const ApplicationsPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -87,7 +82,7 @@ const ApplicationsPage = () => {
               />
             </div>
             <div className="flex gap-2">
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value)}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Application Type" />
                 </SelectTrigger>
@@ -99,7 +94,10 @@ const ApplicationsPage = () => {
                 </SelectContent>
               </Select>
               
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select 
+                value={statusFilter} 
+                onValueChange={(value: string) => setStatusFilter(value as ApplicationStatus | "all")}
+              >
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -114,7 +112,6 @@ const ApplicationsPage = () => {
             </div>
           </div>
           
-          {/* Tabs and Table */}
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="mb-6">
               <TabsTrigger value="all">All ({userApplications.length})</TabsTrigger>

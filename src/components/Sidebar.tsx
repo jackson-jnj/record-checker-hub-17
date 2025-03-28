@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +16,14 @@ import {
   X
 } from "lucide-react";
 
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  roles: string[];
+  badge?: number;
+}
+
 const Sidebar = () => {
   const location = useLocation();
   const { user, hasRole } = useAuth();
@@ -27,9 +34,8 @@ const Sidebar = () => {
     return location.pathname === path;
   };
   
-  // Define navigation items based on roles
-  const getNavigationItems = () => {
-    const items = [
+  const getNavigationItems = (): NavigationItem[] => {
+    const items: NavigationItem[] = [
       {
         name: "Dashboard",
         href: "/dashboard",
@@ -101,7 +107,6 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile sidebar backdrop */}
       {isMobileOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" 
@@ -109,7 +114,6 @@ const Sidebar = () => {
         />
       )}
       
-      {/* Mobile toggle button */}
       <button
         className="md:hidden fixed bottom-4 right-4 p-3 rounded-full bg-police-medium text-white shadow-lg z-30"
         onClick={toggleMobileSidebar}
@@ -117,7 +121,6 @@ const Sidebar = () => {
         {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
       
-      {/* Sidebar */}
       <aside
         className={cn(
           "bg-police-dark text-white transition-all duration-300 z-30",
@@ -141,7 +144,6 @@ const Sidebar = () => {
             </button>
           </div>
           
-          {/* User info */}
           {!isCollapsed && (
             <div className="px-4 py-2 mb-6">
               <div className="flex items-center">
@@ -156,7 +158,6 @@ const Sidebar = () => {
             </div>
           )}
           
-          {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-4">
             <ul className="space-y-1 px-2">
               {navigationItems.map((item) => (
@@ -186,7 +187,6 @@ const Sidebar = () => {
             </ul>
           </nav>
           
-          {/* Collapse button at bottom */}
           <div className="p-4 mt-auto hidden md:block">
             <button
               className={cn(

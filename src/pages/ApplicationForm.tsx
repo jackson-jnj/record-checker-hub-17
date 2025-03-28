@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,7 +74,7 @@ const ApplicationForm = () => {
   
   const handleFileChange = (e) => {
     if (e.target.files) {
-      setFiles([...files, ...Array.from(e.target.files)]);
+      setFiles([...files, ...Array.from(e.target.files as FileList)]);
     }
   };
   
