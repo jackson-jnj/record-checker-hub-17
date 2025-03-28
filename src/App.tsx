@@ -13,6 +13,10 @@ import ApplicationForm from "./pages/ApplicationForm";
 import ApplicationDetail from "./pages/ApplicationDetail";
 import Profile from "./pages/Profile";
 import LoginPage from "./pages/LoginPage";
+import VerificationPage from "./pages/VerificationPage";
+import UsersPage from "./pages/UsersPage";
+import ReportsPage from "./pages/ReportsPage";
+import SettingsPage from "./pages/SettingsPage";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { UserRole } from "./types";
@@ -60,12 +64,12 @@ const App = () => (
             <Route 
               path="/verification" 
               element={
-                <ProtectedRoute allowedRoles={["administrator", "officer"] as UserRole[]}>
+                <ProtectedRoute allowedRoles={["administrator", "officer", "verifier"] as UserRole[]}>
                   <Layout />
                 </ProtectedRoute>
               }
             >
-              <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Verification Queue</h1></div>} />
+              <Route index element={<VerificationPage />} />
             </Route>
             
             {/* Admin routes */}
@@ -77,7 +81,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">User Management</h1></div>} />
+              <Route index element={<UsersPage />} />
             </Route>
             
             <Route 
@@ -88,7 +92,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1></div>} />
+              <Route index element={<ReportsPage />} />
             </Route>
             
             <Route 
@@ -99,7 +103,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route index element={<div className="p-6"><h1 className="text-2xl font-bold">System Settings</h1></div>} />
+              <Route index element={<SettingsPage />} />
             </Route>
             
             {/* Profile accessible to all authenticated users */}

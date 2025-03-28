@@ -7,6 +7,8 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  status?: 'active' | 'inactive';
+  lastLogin?: string;
 }
 
 export type ApplicationStatus = 'pending' | 'processing' | 'approved' | 'rejected';
@@ -25,6 +27,7 @@ export interface Application {
   assignedOfficerName?: string;
   documents?: Document[];
   notes?: string;
+  priority?: 'low' | 'medium' | 'high';
 }
 
 export interface Document {
@@ -44,4 +47,46 @@ export interface NotificationMessage {
   date: string;
   read: boolean;
   link?: string;
+}
+
+export interface SystemSettings {
+  general: {
+    systemName: string;
+    contactEmail: string;
+    supportPhone: string;
+    maintenanceMode: boolean;
+    debugMode: boolean;
+    defaultLanguage: string;
+    autoLogout: string;
+    timezone: string;
+  };
+  email: {
+    smtpServer: string;
+    smtpPort: string;
+    smtpUsername: string;
+    smtpPassword: string;
+    fromEmail: string;
+    emailFooter: string;
+    enableEmailNotifications: boolean;
+  };
+  security: {
+    passwordPolicy: string;
+    minPasswordLength: string;
+    requireSpecialChars: boolean;
+    mfaRequired: boolean;
+    sessionTimeout: string;
+    ipRestriction: boolean;
+    allowedIPs: string;
+    auditLogRetention: string;
+  };
+}
+
+export interface Report {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  createdBy: string;
+  format: 'pdf' | 'csv' | 'excel';
+  url: string;
 }

@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,20 +14,24 @@ import {
   Users, 
   BarChart3,
   Menu,
-  X
+  X,
+  LogOut
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { UserRole } from "@/types";
 
 interface NavigationItem {
   name: string;
   href: string;
   icon: React.ComponentType<any>;
-  roles: string[];
+  roles: UserRole[];
   badge?: number;
 }
 
 const Sidebar = () => {
   const location = useLocation();
-  const { user, hasRole } = useAuth();
+  const navigate = useNavigate();
+  const { user, hasRole, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   
@@ -50,13 +55,13 @@ const Sidebar = () => {
       }
     ];
     
-    if (hasRole(["administrator", "officer"])) {
+    if (hasRole(["administrator", "officer", "verifier"])) {
       items.push({
         name: "Verification Queue",
         href: "/verification",
         icon: ClipboardCheck,
         badge: hasRole("officer") ? 5 : undefined,
-        roles: ["administrator", "officer"],
+        roles: ["administrator", "officer", "verifier"],
       });
     }
     
@@ -91,7 +96,7 @@ const Sidebar = () => {
     });
     
     return items.filter(item => 
-      item.roles.some(role => hasRole(role as any))
+      item.roles.some(role => hasRole(role))
     );
   };
   
@@ -103,6 +108,11 @@ const Sidebar = () => {
   
   const toggleMobileSidebar = () => {
     setIsMobileOpen(!isMobileOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -187,10 +197,30 @@ const Sidebar = () => {
             </ul>
           </nav>
           
-          <div className="p-4 mt-auto hidden md:block">
+          <div className="p-4 mt-auto">
+            {!isCollapsed ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="w-full bg-transparent text-white border-white/30 hover:bg-police-medium hover:text-white hover:border-transparent"
+              >
+                <LogOut className="h-4 w-4 mr-2" /> Logout
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleLogout}
+                className="w-full bg-transparent text-white border-white/30 hover:bg-police-medium hover:text-white hover:border-transparent"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            )}
+
             <button
               className={cn(
-                "w-full flex items-center justify-center p-2 rounded-md text-sm text-gray-300 hover:bg-police-medium hover:text-white transition-colors",
+                "w-full flex items-center justify-center p-2 mt-2 rounded-md text-sm text-gray-300 hover:bg-police-medium hover:text-white transition-colors",
                 isCollapsed && "mx-auto"
               )}
               onClick={toggleSidebar}
