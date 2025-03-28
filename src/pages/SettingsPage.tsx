@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +18,7 @@ import {
   Shield,
   Upload
 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -67,7 +66,6 @@ const SettingsPage = () => {
     toast({
       title: "Settings Saved",
       description: "General settings have been updated successfully.",
-      icon: <CheckCircle2 className="h-4 w-4" />,
     });
   };
 
@@ -75,7 +73,6 @@ const SettingsPage = () => {
     toast({
       title: "Settings Saved",
       description: "Email settings have been updated successfully.",
-      icon: <CheckCircle2 className="h-4 w-4" />,
     });
   };
 
@@ -83,7 +80,6 @@ const SettingsPage = () => {
     toast({
       title: "Settings Saved",
       description: "Security settings have been updated successfully.",
-      icon: <CheckCircle2 className="h-4 w-4" />,
     });
   };
 

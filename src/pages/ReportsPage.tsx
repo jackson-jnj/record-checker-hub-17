@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,8 +12,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  ApplicationStatus,
-  BarChart,
   BarChart3, 
   Download,
   FileText, 
@@ -38,8 +35,8 @@ import {
 } from "recharts";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { DateRangePicker } from "@/components/DateRangePicker";
-import { Application } from "@/types";
-import { toast } from "@/components/ui/use-toast";
+import { Application, ApplicationStatus } from "@/types";
+import { toast } from "@/hooks/use-toast";
 
 const mockApplicationData = [
   { month: 'Jan', standard: 65, enhanced: 40, vulnerable: 24 },
@@ -64,41 +61,10 @@ const completionTimeData = [
   { name: 'Vulnerable', value: 5 },
 ];
 
-// Date range picker component for simplicity
-const DateRangePicker = ({ onChange }: { onChange: (range: { from: Date, to: Date }) => void }) => {
-  return (
-    <div className="flex items-center gap-2">
-      <Label htmlFor="from">From</Label>
-      <input 
-        type="date" 
-        id="from"
-        className="rounded-md border p-2"
-        onChange={(e) => {
-          const from = new Date(e.target.value);
-          const to = new Date();
-          onChange({ from, to });
-        }}
-      />
-      <Label htmlFor="to">To</Label>
-      <input 
-        type="date" 
-        id="to"
-        className="rounded-md border p-2"
-        onChange={(e) => {
-          const from = new Date();
-          from.setMonth(from.getMonth() - 1);
-          const to = new Date(e.target.value);
-          onChange({ from, to });
-        }}
-      />
-    </div>
-  );
-};
-
 const ReportsPage = () => {
   const { hasRole } = useAuth();
   const [reportType, setReportType] = useState("applications");
-  const [dateRange, setDateRange] = useState({ 
+  const [dateRange, setDateRange] = useState<{ from: Date, to: Date }>({ 
     from: new Date(new Date().setMonth(new Date().getMonth() - 6)), 
     to: new Date() 
   });
@@ -182,7 +148,7 @@ const ReportsPage = () => {
               <CardTitle className="text-sm font-medium">
                 Avg. Processing Time
               </CardTitle>
-              <BarChart className="h-4 w-4 text-muted-foreground" />
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">4.5 days</div>
