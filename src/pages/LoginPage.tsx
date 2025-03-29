@@ -6,16 +6,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, AtSign, Lock, Eye, EyeOff, ChevronLeft } from "lucide-react";
+import { Shield, AtSign, Lock, Eye, EyeOff, ChevronLeft, User, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "@/components/ui/use-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated } = useAuth();
+  const { login, signup, isAuthenticated } = useAuth();
+  
+  // Login form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  // Signup form state
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [nrc, setNrc] = useState("");
+  
   const [showPassword, setShowPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [error, setError] = useState("");
@@ -52,8 +66,7 @@ const LoginPage = () => {
     
     try {
       await login(email, password);
-      // Navigate to the page user was trying to access, or dashboard
-      navigate(from, { replace: true });
+      // Navigate handled by useEffect watching isAuthenticated
     } catch (error) {
       setError((error as Error).message || "Login failed");
     } finally {
@@ -61,11 +74,42 @@ const LoginPage = () => {
     }
   };
   
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For demo purposes, we'll just show a message
-    // In a real app, you would create a new user account
-    setError("Signup feature is not implemented in this demo. Please use login.");
+    setError("");
+    
+    // Validate form fields
+    if (!signupEmail || !signupPassword || !confirmPassword || !firstName || !lastName) {
+      setError("Please fill in all required fields");
+      return;
+    }
+    
+    if (signupPassword !== confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    }
+    
+    if (signupPassword.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      await signup(signupEmail, signupPassword, firstName, lastName, nrc);
+      // Set message instead of redirecting immediately as Supabase might require email confirmation
+      toast({
+        title: "Account created successfully",
+        description: "You can now log in with your credentials.",
+      });
+      // Switch to login tab
+      setActiveTab("login");
+    } catch (error) {
+      setError((error as Error).message || "Signup failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const goBack = () => {
@@ -116,10 +160,12 @@ const LoginPage = () => {
             <Shield className="h-12 w-12 text-police-dark" />
           </motion.div>
           <motion.h2 className="mt-6 text-3xl font-extrabold text-police-dark" variants={itemVariants}>
-            Welcome Back
+            {activeTab === "login" ? "Welcome Back" : "Create Account"}
           </motion.h2>
           <motion.p className="mt-2 text-sm text-gray-600" variants={itemVariants}>
-            Enter your credentials to access your account
+            {activeTab === "login" 
+              ? "Enter your credentials to access your account" 
+              : "Fill in your details to create a new account"}
           </motion.p>
         </div>
         
@@ -199,7 +245,7 @@ const LoginPage = () => {
               <motion.div variants={itemVariants}>
                 <Button
                   type="submit"
-                  className="w-full bg-police-dark hover:bg-police-medium"
+                  className="w-full bg-police-dark hover:bg-police-medium text-white"
                   disabled={isLoading}
                 >
                   {isLoading ? "Signing in..." : "Sign in"}
@@ -259,17 +305,43 @@ const LoginPage = () => {
                   variants={itemVariants}
                 >
                   <div className="space-y-1">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" name="firstName" placeholder="John" />
+                    <Label htmlFor="firstName">First Name*</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input 
+                        id="firstName" 
+                        name="firstName" 
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="John" 
+                        className="pl-10"
+                        required
+                      />
+                    </div>
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" name="lastName" placeholder="Doe" />
+                    <Label htmlFor="lastName">Last Name*</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input 
+                        id="lastName" 
+                        name="lastName" 
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Doe" 
+                        className="pl-10"
+                        required
+                      />
+                    </div>
                   </div>
                 </motion.div>
                 
                 <motion.div className="space-y-1" variants={itemVariants}>
-                  <Label htmlFor="signupEmail">Email</Label>
+                  <Label htmlFor="signupEmail">Email*</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <AtSign className="h-5 w-5 text-gray-400" />
@@ -278,6 +350,8 @@ const LoginPage = () => {
                       id="signupEmail" 
                       name="email" 
                       type="email" 
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
                       placeholder="your@email.com" 
                       className="pl-10" 
                       required 
@@ -287,15 +361,23 @@ const LoginPage = () => {
                 
                 <motion.div className="space-y-1" variants={itemVariants}>
                   <Label htmlFor="nrc">NRC (National Registration Card)</Label>
-                  <Input 
-                    id="nrc" 
-                    name="nrc" 
-                    placeholder="999999/99/1" 
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <CreditCard className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <Input 
+                      id="nrc" 
+                      name="nrc"
+                      value={nrc}
+                      onChange={(e) => setNrc(e.target.value)}
+                      placeholder="999999/99/1" 
+                      className="pl-10"
+                    />
+                  </div>
                 </motion.div>
                 
                 <motion.div className="space-y-1" variants={itemVariants}>
-                  <Label htmlFor="signupPassword">Password</Label>
+                  <Label htmlFor="signupPassword">Password*</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Lock className="h-5 w-5 text-gray-400" />
@@ -303,16 +385,26 @@ const LoginPage = () => {
                     <Input 
                       id="signupPassword" 
                       name="password" 
-                      type="password" 
+                      type={showSignupPassword ? "text" : "password"} 
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
                       placeholder="••••••••" 
                       className="pl-10" 
                       required 
                     />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                      onClick={() => setShowSignupPassword(!showSignupPassword)}
+                    >
+                      {showSignupPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters long</p>
                 </motion.div>
                 
                 <motion.div className="space-y-1" variants={itemVariants}>
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">Confirm Password*</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Lock className="h-5 w-5 text-gray-400" />
@@ -320,18 +412,31 @@ const LoginPage = () => {
                     <Input 
                       id="confirmPassword" 
                       name="confirmPassword" 
-                      type="password" 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••" 
                       className="pl-10" 
                       required 
                     />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
                 </motion.div>
               </div>
 
               <motion.div variants={itemVariants}>
-                <Button type="submit" className="w-full bg-police-dark hover:bg-police-medium">
-                  Create Account
+                <Button 
+                  type="submit" 
+                  className="w-full bg-police-dark hover:bg-police-medium text-white"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
               </motion.div>
             </form>
