@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,39 +18,60 @@ import { Shield } from "lucide-react";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
   
   const userNotifications = mockNotifications.filter(n => n.userId === user?.id);
   const unreadCount = userNotifications.filter(n => !n.read).length;
 
+  // Toggle sidebar and dispatch custom event
+  const toggleSidebar = () => {
+    const newState = !isSidebarOpen;
+    setIsSidebarOpen(newState);
+    
+    // Dispatch event for Layout and Sidebar components to listen to
+    window.dispatchEvent(new CustomEvent('sidebar-toggle', { 
+      detail: { open: newState } 
+    }));
+  };
+
   const handleLogoClick = () => {
     navigate('/');
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-    // Trigger an event that the Layout component can listen to
-    const event = new CustomEvent('toggle-sidebar', { detail: { open: !sidebarOpen } });
-    window.dispatchEvent(event);
-  };
+  // Listen for sidebar events from other components
+  useEffect(() => {
+    const handleSidebarEvent = (event: CustomEvent) => {
+      setIsSidebarOpen(event.detail.open);
+    };
+
+    window.addEventListener('sidebar-toggle', handleSidebarEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('sidebar-toggle', handleSidebarEvent as EventListener);
+    };
+  }, []);
 
   return (
     <header className="bg-white border-b border-police-border sticky top-0 z-10">
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center">
-          <button
-            type="button"
-            className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-police-medium md:hidden"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={toggleSidebar}
-            aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+            className="mr-2 text-gray-500 hover:text-gray-600 focus:ring-2 focus:ring-police-medium md:hidden"
           >
-            <span className="sr-only">{sidebarOpen ? "Close sidebar" : "Open sidebar"}</span>
-            <Menu className="h-6 w-6" aria-hidden="true" />
-          </button>
+            {isSidebarOpen ? (
+              <X className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            )}
+          </Button>
           
-          <button onClick={handleLogoClick} className="flex items-center ml-2 md:ml-0 transition-all duration-300 hover:scale-105">
+          <button onClick={handleLogoClick} className="flex items-center transition-all duration-300 hover:scale-105">
             <Shield className="h-8 w-8 text-police-dark" />
             <span className="ml-2 font-bold text-lg text-police-dark hidden md:block">Record Check</span>
           </button>

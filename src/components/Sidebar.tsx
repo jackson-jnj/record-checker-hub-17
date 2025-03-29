@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +12,6 @@ import {
   Shield, 
   Users, 
   BarChart3,
-  Menu,
-  X,
   LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,29 +32,24 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   
+  // Listen for sidebar toggle events from Navbar
+  useEffect(() => {
+    const handleSidebarToggle = (event: CustomEvent) => {
+      setIsMobileOpen(event.detail.open);
+    };
+    
+    window.addEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
+    
+    return () => {
+      window.removeEventListener('sidebar-toggle', handleSidebarToggle as EventListener);
+    };
+  }, []);
+  
   // Close mobile sidebar when navigating to a new page
   useEffect(() => {
     setIsMobileOpen(false);
   }, [location.pathname]);
 
-  // Close mobile sidebar when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const sidebar = document.getElementById('mobile-sidebar');
-      if (isMobileOpen && sidebar && !sidebar.contains(event.target as Node)) {
-        setIsMobileOpen(false);
-      }
-    };
-
-    if (isMobileOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMobileOpen]);
-  
   const isActive = (path: string) => {
     return location.pathname === path;
   };
@@ -128,10 +120,6 @@ const Sidebar = () => {
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
-  
-  const toggleMobileSidebar = () => {
-    setIsMobileOpen(!isMobileOpen);
-  };
 
   const handleLogout = () => {
     logout();
@@ -143,20 +131,12 @@ const Sidebar = () => {
       {isMobileOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" 
-          onClick={toggleMobileSidebar}
+          onClick={() => setIsMobileOpen(false)}
         />
       )}
       
-      <button
-        className="md:hidden fixed bottom-4 right-4 p-3 rounded-full bg-police-medium text-white shadow-lg z-30"
-        onClick={toggleMobileSidebar}
-        aria-label="Toggle menu"
-      >
-        {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-      
       <aside
-        id="mobile-sidebar"
+        id="sidebar"
         className={cn(
           "bg-police-dark text-white transition-all duration-300 z-30",
           isCollapsed ? "w-20" : "w-64",
@@ -178,7 +158,11 @@ const Sidebar = () => {
               onClick={toggleSidebar}
               aria-label="Collapse sidebar"
             >
-              <Menu size={20} />
+              {isCollapsed ? (
+                <LogOut className="h-5 w-5 rotate-180" />
+              ) : (
+                <LogOut className="h-5 w-5" />
+              )}
             </button>
           </div>
           
@@ -255,10 +239,10 @@ const Sidebar = () => {
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? (
-                <Menu className="h-5 w-5" />
+                <LogOut className="h-5 w-5 rotate-180" />
               ) : (
                 <>
-                  <Menu className="h-5 w-5 mr-2" /> Collapse
+                  <LogOut className="h-5 w-5 mr-2" /> Collapse
                 </>
               )}
             </button>
