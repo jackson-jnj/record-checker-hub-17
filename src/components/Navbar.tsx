@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { mockNotifications } from "@/data/mockData";
+import { Shield } from "lucide-react";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -26,16 +27,21 @@ const Navbar = () => {
   return (
     <header className="bg-white border-b border-police-border sticky top-0 z-10">
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        <button
-          type="button"
-          className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-police-medium md:hidden"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <span className="sr-only">Open sidebar</span>
-          <Menu className="h-6 w-6" aria-hidden="true" />
-        </button>
-        
-        <div className="flex-1"></div>
+        <div className="flex items-center">
+          <button
+            type="button"
+            className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-police-medium md:hidden"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <span className="sr-only">Open sidebar</span>
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          </button>
+          
+          <Link to="/" className="flex items-center ml-2 md:ml-0">
+            <Shield className="h-8 w-8 text-police-dark transition-transform hover:scale-110" />
+            <span className="ml-2 font-bold text-lg text-police-dark hidden md:block">Record Check</span>
+          </Link>
+        </div>
         
         <div className="flex items-center space-x-4">
           <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
@@ -83,7 +89,7 @@ const Navbar = () => {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="bg-white">
               <DropdownMenuLabel>
                 <div>{user?.name}</div>
                 <div className="text-xs text-gray-500">{user?.email}</div>

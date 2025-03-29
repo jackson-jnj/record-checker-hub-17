@@ -50,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("Fetching user profile for:", userId);
       // Get user profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -57,7 +58,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
         
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Profile error:", profileError);
+        throw profileError;
+      }
+      
+      // Get user email from auth
+      const { data: userData } = await supabase.auth.getUser();
+      const userEmail = userData?.user?.email || '';
       
       // Get user role
       const { data: roleData, error: roleError } = await supabase
@@ -66,13 +74,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', userId)
         .single();
         
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error("Role error:", roleError);
+        throw roleError;
+      }
+      
+      console.log("User data loaded:", { profile: profileData, role: roleData });
       
       // Set user with combined data
       setUser({
         id: userId,
         name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
-        email: '', // Email is not stored directly in our profiles table
+        email: userEmail,
         role: roleData.role as UserRole,
         status: 'active',
       });
@@ -115,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       // Sign up with Supabase Auth
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -129,11 +142,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (signUpError) throw signUpError;
       
+      console.log("Signup successful, user data:", data);
+      
       toast({
         title: 'Registration Successful',
         description: 'Your account has been created successfully.',
       });
     } catch (error) {
+      console.error("Signup error:", error);
       toast({
         title: 'Registration Failed',
         description: (error as Error).message,

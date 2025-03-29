@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,29 @@ const Sidebar = () => {
   const { user, hasRole, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  
+  // Close mobile sidebar when navigating to a new page
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [location.pathname]);
+
+  // Close mobile sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const sidebar = document.getElementById('mobile-sidebar');
+      if (isMobileOpen && sidebar && !sidebar.contains(event.target as Node)) {
+        setIsMobileOpen(false);
+      }
+    };
+
+    if (isMobileOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileOpen]);
   
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -127,28 +150,33 @@ const Sidebar = () => {
       <button
         className="md:hidden fixed bottom-4 right-4 p-3 rounded-full bg-police-medium text-white shadow-lg z-30"
         onClick={toggleMobileSidebar}
+        aria-label="Toggle menu"
       >
         {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
       
       <aside
+        id="mobile-sidebar"
         className={cn(
           "bg-police-dark text-white transition-all duration-300 z-30",
           isCollapsed ? "w-20" : "w-64",
-          isMobileOpen ? "fixed inset-y-0 left-0" : "hidden md:block"
+          isMobileOpen 
+            ? "fixed inset-y-0 left-0 transform translate-x-0 shadow-xl" 
+            : "hidden md:block transform -translate-x-full md:translate-x-0"
         )}
       >
         <div className="flex flex-col h-full">
           <div className="p-4 flex items-center justify-between">
-            <div className={cn("flex items-center", isCollapsed && "justify-center w-full")}>
-              <Shield className="w-8 h-8 text-white" />
+            <Link to="/" className={cn("flex items-center", isCollapsed && "justify-center w-full")}>
+              <Shield className="w-8 h-8 text-white transition-transform hover:scale-110" />
               {!isCollapsed && (
                 <span className="ml-2 font-bold text-lg">Record Check</span>
               )}
-            </div>
+            </Link>
             <button 
               className={cn("text-white p-1 rounded hover:bg-police-medium", isCollapsed && "hidden")}
               onClick={toggleSidebar}
+              aria-label="Collapse sidebar"
             >
               <Menu size={20} />
             </button>
@@ -224,6 +252,7 @@ const Sidebar = () => {
                 isCollapsed && "mx-auto"
               )}
               onClick={toggleSidebar}
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? (
                 <Menu className="h-5 w-5" />
