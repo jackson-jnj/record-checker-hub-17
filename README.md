@@ -1,4 +1,5 @@
-# Welcome to your Lovable project
+
+# Police Record Check System
 
 ## Project info
 
@@ -36,34 +37,41 @@ npm i
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Deployment with Netlify
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+This project is configured for easy deployment to Netlify. Follow these steps to deploy:
 
-**Use GitHub Codespaces**
+1. Create a Netlify account if you don't have one already
+2. Create a new site from Git
+3. Connect your repository
+4. Set the build command to `npm run build`
+5. Set the publish directory to `dist`
+6. Set up environment variables:
+   - VITE_SUPABASE_URL - Your Supabase project URL
+   - VITE_SUPABASE_ANON_KEY - Your Supabase anon/public key
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Netlify automatically handles redirects for SPA routing through the provided `netlify.toml` configuration.
 
 ## What technologies are used for this project?
 
-This project is built with .
+This project is built with:
 
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase for authentication, database, and storage
 
-## How can I deploy this project?
+## Custom Domain Setup
 
-Simply open [Lovable](https://lovable.dev/projects/f2924b33-02e8-4ce0-af41-e44d7f0669e4) and click on Share -> Publish.
+To set up a custom domain with Netlify:
+
+1. Go to your Netlify site dashboard
+2. Navigate to Domain Settings
+3. Click "Add custom domain"
+4. Follow the instructions to verify and configure your domain
 
 ## I want to use a custom domain - is that possible?
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+We don't support custom domains (yet) on Lovable. If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
