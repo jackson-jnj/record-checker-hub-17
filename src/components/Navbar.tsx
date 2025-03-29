@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { mockNotifications } from "@/data/mockData";
 import { Shield } from "lucide-react";
 
@@ -20,9 +20,21 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const navigate = useNavigate();
   
   const userNotifications = mockNotifications.filter(n => n.userId === user?.id);
   const unreadCount = userNotifications.filter(n => !n.read).length;
+
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+    // Trigger an event that the Layout component can listen to
+    const event = new CustomEvent('toggle-sidebar', { detail: { open: !sidebarOpen } });
+    window.dispatchEvent(event);
+  };
 
   return (
     <header className="bg-white border-b border-police-border sticky top-0 z-10">
@@ -31,16 +43,17 @@ const Navbar = () => {
           <button
             type="button"
             className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-police-medium md:hidden"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={toggleSidebar}
+            aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
           >
-            <span className="sr-only">Open sidebar</span>
+            <span className="sr-only">{sidebarOpen ? "Close sidebar" : "Open sidebar"}</span>
             <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
           
-          <Link to="/" className="flex items-center ml-2 md:ml-0">
-            <Shield className="h-8 w-8 text-police-dark transition-transform hover:scale-110" />
+          <button onClick={handleLogoClick} className="flex items-center ml-2 md:ml-0 transition-all duration-300 hover:scale-105">
+            <Shield className="h-8 w-8 text-police-dark" />
             <span className="ml-2 font-bold text-lg text-police-dark hidden md:block">Record Check</span>
-          </Link>
+          </button>
         </div>
         
         <div className="flex items-center space-x-4">

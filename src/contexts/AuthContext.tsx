@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { mockUsers } from '@/data/mockData';
 
 interface AuthContextType {
   user: User | null;
@@ -22,6 +23,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Set up auth state listener and check for existing session
   useEffect(() => {
+    // Check for session in localStorage
+    const storedUser = localStorage.getItem('demo_user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setLoading(false);
+      return;
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -101,6 +110,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
+      // Check if this is a demo account
+      const demoUser = mockUsers.find(user => user.email === email && password === 'password');
+      
+      if (demoUser) {
+        // Handle demo login
+        console.log("Logging in with demo account:", demoUser);
+        
+        // Store the user in localStorage for persistence
+        localStorage.setItem('demo_user', JSON.stringify(demoUser));
+        
+        // Set the user in context
+        setUser(demoUser);
+        
+        toast({
+          title: 'Demo Login Successful',
+          description: `Welcome, ${demoUser.name}!`,
+        });
+        
+        return;
+      }
+      
+      // Real authentication with Supabase
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -163,6 +194,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const logout = async () => {
     try {
+      // Check if using a demo account
+      const storedUser = localStorage.getItem('demo_user');
+      if (storedUser) {
+        localStorage.removeItem('demo_user');
+        setUser(null);
+        toast({
+          title: 'Demo Logout',
+          description: 'You have been logged out from the demo account.',
+        });
+        return;
+      }
+      
+      // Regular logout via Supabase
       await supabase.auth.signOut();
       setUser(null);
       toast({
