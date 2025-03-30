@@ -64,7 +64,7 @@ const Index = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="text-white border-white hover:bg-white/10"
+              className="text-police-light border-white hover:bg-white/10"
               asChild
             >
               <Link to="/login?tab=signup">Create Account</Link>

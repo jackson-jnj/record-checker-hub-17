@@ -1,12 +1,14 @@
 
 import React, { useEffect, useState } from "react";
-import { ScaleProps, getScaleClasses } from "@/lib/animations";
+import { getScaleClasses } from "@/lib/animations";
 
-interface ScaleInProps extends ScaleProps {
+interface ScaleInProps {
   children: React.ReactNode;
   delay?: number;
   duration?: number;
   once?: boolean;
+  className?: string;
+  state?: "visible" | "hidden";
 }
 
 export const ScaleIn: React.FC<ScaleInProps> = ({
@@ -15,8 +17,9 @@ export const ScaleIn: React.FC<ScaleInProps> = ({
   delay = 0,
   duration = 500,
   once = true,
+  state: initialState,
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(initialState === "visible");
 
   useEffect(() => {
     const timer = setTimeout(() => {
