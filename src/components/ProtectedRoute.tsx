@@ -12,7 +12,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   allowedRoles 
 }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading, user, hasRole } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -29,8 +29,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // If allowedRoles is provided, check if user has the required role
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
+  if (allowedRoles && allowedRoles.length > 0 && user) {
+    const hasAllowedRole = allowedRoles.some(role => hasRole(role));
+    if (!hasAllowedRole) {
+      console.log("User role not authorized:", user.role, "Allowed roles:", allowedRoles);
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;

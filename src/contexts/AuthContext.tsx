@@ -26,7 +26,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for session in localStorage
     const storedUser = localStorage.getItem('demo_user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+        console.log("Using stored demo user:", JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Error parsing stored user:", e);
+        localStorage.removeItem('demo_user');
+      }
       setLoading(false);
       return;
     }
@@ -34,8 +40,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
         if (session?.user) {
-          fetchUserProfile(session.user.id);
+          // Use setTimeout to avoid potential deadlock
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
         } else {
           setUser(null);
           setLoading(false);
@@ -45,11 +55,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Existing session check:", session?.user?.id);
       if (session?.user) {
         fetchUserProfile(session.user.id);
       } else {
         setLoading(false);
       }
+    }).catch(error => {
+      console.error("Error getting session:", error);
+      setLoading(false);
     });
 
     return () => {
@@ -111,7 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       // Check if this is a demo account
-      const demoUser = mockUsers.find(user => user.email === email && password === 'password');
+      const demoUser = mockUsers.find(user => user.email === email.toLowerCase() && password === 'password');
       
       if (demoUser) {
         // Handle demo login
@@ -132,18 +146,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Real authentication with Supabase
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) throw error;
       
+      console.log("Supabase login successful:", data.user?.id);
+      
       toast({
         title: 'Login Successful',
         description: 'Welcome back!',
       });
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: 'Login Failed',
         description: (error as Error).message,
