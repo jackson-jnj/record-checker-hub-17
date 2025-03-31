@@ -153,7 +153,6 @@ const ApplicationForm = () => {
         <p className="text-gray-500 mt-1">Submit a new police record check request</p>
       </div>
       
-      {/* Progress Indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -407,6 +406,7 @@ const ApplicationForm = () => {
                     <SelectContent>
                       <SelectItem value="passport">Passport</SelectItem>
                       <SelectItem value="driver_license">Driver's License</SelectItem>
+                      <SelectItem value="nrc">NRC</SelectItem>
                       <SelectItem value="state_id">State ID</SelectItem>
                       <SelectItem value="other">Other Government ID</SelectItem>
                     </SelectContent>

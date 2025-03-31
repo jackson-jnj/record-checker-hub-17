@@ -1,23 +1,27 @@
 
 import React, { useEffect, useState } from "react";
-import { SlideProps, getSlideClasses } from "@/lib/animations";
+import { getSlideClasses } from "@/lib/animations";
 
-interface SlideInProps extends SlideProps {
+interface SlideInProps {
   children: React.ReactNode;
   delay?: number;
   duration?: number;
+  direction?: "left" | "right" | "up" | "down";
   once?: boolean;
+  className?: string;
+  state?: "visible" | "hidden";
 }
 
 export const SlideIn: React.FC<SlideInProps> = ({
   children,
   className,
-  direction = "up",
   delay = 0,
   duration = 500,
+  direction = "left",
   once = true,
+  state: initialState,
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(initialState === "visible");
 
   useEffect(() => {
     const timer = setTimeout(() => {
