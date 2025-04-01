@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -114,6 +115,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
+      // First check if it's the real admin account
+      if (email.toLowerCase() === 'jnjovu51@gmail.com' && password === '12345678') {
+        const adminUser = {
+          id: 'real-admin-001',
+          name: 'Admin User',
+          email: 'jnjovu51@gmail.com',
+          role: 'administrator' as UserRole,
+          status: 'active',
+        };
+        localStorage.setItem('demo_user', JSON.stringify(adminUser));
+        setUser(adminUser);
+        toast({
+          title: 'Admin Login Successful',
+          description: `Welcome, ${adminUser.name}!`,
+        });
+        return;
+      }
+      
+      // Then check other demo accounts
       const demoUser = mockUsers.find(user => user.email === email.toLowerCase() && password === 'password');
       
       if (demoUser) {
@@ -127,6 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
+      // If not a demo account, try Supabase auth
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -174,7 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast({
         title: 'Registration Successful',
-        description: 'Your account has been created successfully.',
+        description: 'Your account has been created successfully. You can now log in.',
       });
     } catch (error) {
       console.error("Signup error:", error);

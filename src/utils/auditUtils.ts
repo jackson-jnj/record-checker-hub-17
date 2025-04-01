@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { debug } from "@/utils/debugUtils";
 
 /**
@@ -14,8 +13,7 @@ export const logUserAction = async (
   newData?: any
 ) => {
   try {
-    const auth = supabase.auth.getUser();
-    const userResponse = await auth;
+    const userResponse = await supabase.auth.getUser();
     const userId = userResponse.data.user?.id;
     
     if (!userId) {
@@ -52,8 +50,6 @@ export const logUserAction = async (
  * Hook for logging user actions with access to auth context
  */
 export const useAuditLog = () => {
-  const { user } = useAuth();
-  
   const logAction = async (
     action: string,
     tableName: string,
@@ -61,14 +57,17 @@ export const useAuditLog = () => {
     oldData?: any,
     newData?: any
   ) => {
-    if (!user?.id) {
-      debug.warn("useAuditLog", "No authenticated user found, cannot log action");
-      return null;
-    }
-    
     try {
+      const userResponse = await supabase.auth.getUser();
+      const userId = userResponse.data.user?.id;
+      
+      if (!userId) {
+        debug.warn("useAuditLog", "No authenticated user found, cannot log action");
+        return null;
+      }
+      
       const { data, error } = await supabase.rpc('create_audit_log', {
-        _user_id: user.id,
+        _user_id: userId,
         _action: action,
         _table_name: tableName,
         _record_id: recordId,
@@ -82,7 +81,7 @@ export const useAuditLog = () => {
       }
 
       debug.log("useAuditLog", "User action logged successfully", { 
-        action, tableName, recordId, userId: user.id, auditLogId: data 
+        action, tableName, recordId, userId, auditLogId: data 
       });
       
       return data;

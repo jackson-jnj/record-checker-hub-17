@@ -8,6 +8,7 @@ export const mockUsers: User[] = [
     name: 'Admin User',
     email: 'admin@example.com',
     role: 'administrator',
+    status: 'active',
     avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=1A3A6E&color=fff',
   },
   {
@@ -15,6 +16,7 @@ export const mockUsers: User[] = [
     name: 'John Officer',
     email: 'officer@example.com',
     role: 'officer',
+    status: 'active',
     avatar: 'https://ui-avatars.com/api/?name=John+Officer&background=2C5282&color=fff',
   },
   {
@@ -22,6 +24,7 @@ export const mockUsers: User[] = [
     name: 'Jane Applicant',
     email: 'applicant@example.com',
     role: 'applicant',
+    status: 'active',
     avatar: 'https://ui-avatars.com/api/?name=Jane+Applicant&background=319795&color=fff',
   },
   {
@@ -29,6 +32,7 @@ export const mockUsers: User[] = [
     name: 'Mark Verifier',
     email: 'verifier@example.com',
     role: 'verifier',
+    status: 'active',
     avatar: 'https://ui-avatars.com/api/?name=Mark+Verifier&background=4299E1&color=fff',
   },
 ];

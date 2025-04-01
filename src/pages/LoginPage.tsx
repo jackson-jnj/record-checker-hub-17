@@ -105,6 +105,8 @@ const LoginPage = () => {
       });
       // Switch to login tab
       setActiveTab("login");
+      // Auto-fill the email field with the newly registered email
+      setEmail(signupEmail);
     } catch (error) {
       setError((error as Error).message || "Signup failed");
     } finally {
@@ -262,8 +264,8 @@ const LoginPage = () => {
                 <div className="grid grid-cols-2 gap-2 text-xs mt-1">
                   <div className="border rounded p-2">
                     <div className="font-semibold">Admin</div>
-                    <div>admin@example.com</div>
-                    <div>password</div>
+                    <div>jnjovu51@gmail.com</div>
+                    <div>12345678</div>
                   </div>
                   <div className="border rounded p-2">
                     <div className="font-semibold">Applicant</div>
