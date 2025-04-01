@@ -7,20 +7,31 @@ import { useAuth } from "@/contexts/AuthContext";
 import { FadeIn } from "@/components/animations/FadeIn";
 import { useIsMobile, useDeviceType } from "@/hooks/use-mobile";
 import { debug } from "@/utils/debugUtils";
+import { useUserSync } from "@/hooks/useUserSync";
+import { toast } from "@/components/ui/use-toast";
 
 const Layout = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const isMobile = useIsMobile();
   const deviceType = useDeviceType();
+  
+  // Enable user session synchronization
+  useUserSync();
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!user) {
+    if (!isAuthenticated) {
+      debug.log("Layout", "User not authenticated, redirecting to login");
       navigate('/login');
+    } else {
+      debug.log("Layout", "User authenticated, staying on current page", {
+        userId: user?.id,
+        userRole: user?.role
+      });
     }
-  }, [user, navigate]);
+  }, [isAuthenticated, navigate, user]);
 
   // Close sidebar by default on mobile
   useEffect(() => {
@@ -29,7 +40,11 @@ const Layout = () => {
     } else {
       setIsSidebarOpen(true);
     }
-    debug.log("Layout", "Device type changed", { deviceType, isMobile, isSidebarOpen: isMobile ? false : true });
+    debug.log("Layout", "Device type changed", { 
+      deviceType, 
+      isMobile, 
+      isSidebarOpen: isMobile ? false : true 
+    });
   }, [isMobile, deviceType]);
 
   // Listen for sidebar toggle events
@@ -46,8 +61,25 @@ const Layout = () => {
     };
   }, []);
 
+  // Display welcome toast on initial load
+  useEffect(() => {
+    if (user) {
+      toast({
+        title: `Welcome, ${user.name}!`,
+        description: `You are logged in as ${user.role}.`,
+        duration: 3000,
+      });
+      
+      debug.log("Layout", "User session started", {
+        userId: user.id,
+        userRole: user.role,
+        deviceType
+      });
+    }
+  }, [user, deviceType]);
+
   return (
-    <div className="app-container flex h-screen overflow-hidden">
+    <div className="app-container flex h-screen overflow-hidden bg-police-background/5">
       <Sidebar />
       <div 
         className={`flex flex-col flex-1 overflow-hidden transition-all duration-300 ease-in-out ${
@@ -55,7 +87,7 @@ const Layout = () => {
         }`}
       >
         <Navbar />
-        <main className="flex-1 overflow-y-auto bg-police-background">
+        <main className="flex-1 overflow-y-auto bg-police-background/5">
           <FadeIn duration={500} className={`page-container ${isMobile ? 'px-2 py-4' : 'px-4 py-8'}`}>
             <Outlet />
           </FadeIn>
