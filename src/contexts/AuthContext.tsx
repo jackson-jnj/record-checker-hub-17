@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
-import { mockUsers } from '@/data/mockData';
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +13,7 @@ interface AuthContextType {
   refreshSession: () => Promise<void>;
   isAuthenticated: boolean;
   hasRole: (role: UserRole | UserRole[]) => boolean;
+  createUser: (email: string, role: UserRole, firstName: string, lastName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,19 +23,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   
   useEffect(() => {
-    const storedUser = localStorage.getItem('demo_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-        console.log("Using stored demo user:", JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Error parsing stored user:", e);
-        localStorage.removeItem('demo_user');
-      }
-      setLoading(false);
-      return;
-    }
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
@@ -115,39 +102,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // First check if it's the real admin account
-      if (email.toLowerCase() === 'jnjovu51@gmail.com' && password === '12345678') {
-        const adminUser: User = {
-          id: 'real-admin-001',
-          name: 'Admin User',
-          email: 'jnjovu51@gmail.com',
-          role: 'administrator' as UserRole,
-          status: 'active',
-        };
-        localStorage.setItem('demo_user', JSON.stringify(adminUser));
-        setUser(adminUser);
-        toast({
-          title: 'Admin Login Successful',
-          description: `Welcome, ${adminUser.name}!`,
-        });
-        return;
-      }
-      
-      // Then check other demo accounts
-      const demoUser = mockUsers.find(user => user.email === email.toLowerCase() && password === 'password');
-      
-      if (demoUser) {
-        console.log("Logging in with demo account:", demoUser);
-        localStorage.setItem('demo_user', JSON.stringify(demoUser));
-        setUser(demoUser);
-        toast({
-          title: 'Demo Login Successful',
-          description: `Welcome, ${demoUser.name}!`,
-        });
-        return;
-      }
-      
-      // If not a demo account, try Supabase auth
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -174,29 +128,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  // Determine user role based on email domain
-  const determineUserRole = (email: string): UserRole => {
-    const lowerEmail = email.toLowerCase();
-    
-    // Check for specific email patterns
-    if (lowerEmail.endsWith('@police.gov.zm')) {
-      return 'officer';
-    } else if (lowerEmail.includes('admin') || lowerEmail.includes('administrator')) {
-      return 'administrator';
-    } else if (lowerEmail.includes('verify') || lowerEmail.includes('verifier')) {
-      return 'verifier';
-    } else {
-      // Default role
-      return 'applicant';
-    }
-  };
-  
   const signup = async (email: string, password: string, firstName: string, lastName: string, nrc?: string) => {
     setLoading(true);
     try {
-      // Determine role based on email
-      const role = determineUserRole(email);
-      
       const { error: signUpError, data } = await supabase.auth.signUp({
         email,
         password,
@@ -205,7 +139,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             first_name: firstName,
             last_name: lastName,
             nrc: nrc || '',
-            role: role, // Include role in metadata
           },
         },
       });
@@ -213,27 +146,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (signUpError) throw signUpError;
       
       console.log("Signup successful, user data:", data);
-      
-      // If user was created successfully and we have their ID
-      if (data.user) {
-        try {
-          // Explicitly set role in user_roles table (this might be redundant with DB trigger but ensures role is set)
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .upsert([
-              { 
-                user_id: data.user.id,
-                role: role
-              }
-            ]);
-            
-          if (roleError) {
-            console.error("Error setting user role:", roleError);
-          }
-        } catch (roleSetError) {
-          console.error("Failed to set user role:", roleSetError);
-        }
-      }
       
       toast({
         title: 'Registration Successful',
@@ -252,19 +164,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  const logout = async () => {
+  const createUser = async (email: string, role: UserRole, firstName: string, lastName: string) => {
+    setLoading(true);
     try {
-      const storedUser = localStorage.getItem('demo_user');
-      if (storedUser) {
-        localStorage.removeItem('demo_user');
-        setUser(null);
-        toast({
-          title: 'Demo Logout',
-          description: 'You have been logged out from the demo account.',
-        });
-        return;
+      // Check if current user is an admin
+      if (!user || user.role !== 'administrator') {
+        throw new Error('Only administrators can create users');
       }
       
+      // Generate a random password (will be reset on first login)
+      const tempPassword = Math.random().toString(36).slice(-8);
+      
+      // Create invitation
+      const { data: inviteData, error: inviteError } = await supabase
+        .from('user_invitations')
+        .insert({
+          email: email,
+          role: role,
+          invited_by: user.id,
+          token: crypto.randomUUID()
+        })
+        .select();
+        
+      if (inviteError) throw inviteError;
+      
+      // Create the user account
+      const { error: signUpError, data } = await supabase.auth.admin.createUser({
+        email,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          role: role
+        }
+      });
+      
+      if (signUpError) throw signUpError;
+      
+      // Explicitly set the role (overriding the email-based detection)
+      if (data.user) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .upsert([
+            { 
+              user_id: data.user.id,
+              role: role
+            }
+          ]);
+          
+        if (roleError) throw roleError;
+      }
+      
+      toast({
+        title: 'User Created Successfully',
+        description: `${firstName} ${lastName} has been added as a ${role}.`,
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      toast({
+        title: 'Failed to Create User',
+        description: (error as Error).message,
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const logout = async () => {
+    try {
       await supabase.auth.signOut();
       setUser(null);
       toast({
@@ -283,12 +253,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const refreshSession = async () => {
     try {
-      const storedUser = localStorage.getItem('demo_user');
-      if (storedUser) {
-        console.log("Refreshing demo user session");
-        return;
-      }
-      
       const { data, error } = await supabase.auth.refreshSession();
       
       if (error) {
@@ -325,7 +289,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         refreshSession,
         isAuthenticated: !!user,
-        hasRole
+        hasRole,
+        createUser
       }}
     >
       {children}

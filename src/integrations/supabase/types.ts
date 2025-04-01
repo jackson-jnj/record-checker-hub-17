@@ -238,6 +238,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_invitations: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["user_role"]
+          token: string
+          used: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          invited_by: string
+          role: Database["public"]["Enums"]["user_role"]
+          token: string
+          used?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          token?: string
+          used?: boolean | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -274,6 +307,12 @@ export type Database = {
           _new_data: Json
         }
         Returns: string
+      }
+      determine_role_from_email: {
+        Args: {
+          email: string
+        }
+        Returns: Database["public"]["Enums"]["user_role"]
       }
       generate_reference_number: {
         Args: Record<PropertyKey, never>

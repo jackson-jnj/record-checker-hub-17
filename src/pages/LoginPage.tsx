@@ -139,14 +139,6 @@ const LoginPage = () => {
     }
   };
 
-  // Demo credentials with more information
-  const demoCredentials = [
-    { role: "Admin", email: "jnjovu51@gmail.com", password: "12345678", description: "Full system access" },
-    { role: "Applicant", email: "applicant@example.com", password: "password", description: "Can submit applications" },
-    { role: "Officer", email: "officer@example.com", password: "password", description: "Can process applications" },
-    { role: "Verifier", email: "verifier@example.com", password: "password", description: "Can verify applications" }
-  ];
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-police-dark to-police-medium py-12 px-4 sm:px-6 lg:px-8">
       <motion.div 
@@ -266,28 +258,13 @@ const LoginPage = () => {
                 className="text-center mt-6"
                 variants={itemVariants}
               >
-                <p className="text-gray-700 font-semibold mb-2">
-                  Demo Credentials
+                <p className="text-gray-600 text-sm">
+                  New users can create an account with a standard email address. <br/>
+                  Government officials should use their official @police.gov email.
                 </p>
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                  <div className="grid grid-cols-1 gap-4">
-                    {demoCredentials.map((cred, index) => (
-                      <div 
-                        key={index} 
-                        className="border rounded p-3 bg-white hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => {
-                          setEmail(cred.email);
-                          setPassword(cred.password);
-                        }}
-                      >
-                        <div className="font-semibold text-police-dark">{cred.role}</div>
-                        <div className="text-sm text-gray-600">{cred.email}</div>
-                        <div className="text-sm text-gray-600">Password: {cred.password}</div>
-                        <div className="text-xs text-gray-500 mt-1">{cred.description}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <p className="text-gray-600 text-xs mt-2">
+                  For first-time admin setup: admin@police.gov.com
+                </p>
               </motion.div>
             </form>
           </TabsContent>
@@ -364,9 +341,8 @@ const LoginPage = () => {
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     Role will be determined based on your email: 
-                    <span className="font-medium">@police.gov.zm</span> for officers, 
-                    emails with "admin" for administrators, 
-                    emails with "verifier" for verifiers
+                    <span className="font-medium">@police.gov.com</span> for officers, 
+                    <span className="font-medium">admin@police.gov.com</span> for administrators
                   </p>
                 </motion.div>
                 

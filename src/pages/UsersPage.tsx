@@ -1,6 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Search, Edit, Trash } from "lucide-react";
+import { Search, Edit, Trash, RefreshCw } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
@@ -22,7 +23,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -34,106 +34,141 @@ import {
 import { Label } from "@/components/ui/label";
 import { User, UserRole } from "@/types";
 import { toast } from "@/components/ui/use-toast";
+import ManageUsersComponent from "@/components/ManageUsersComponent";
 
-const mockUsers = [
-  {
-    id: "user-001",
-    name: "John Smith",
-    email: "john.smith@example.com",
-    role: "applicant" as UserRole,
-    status: "active",
-    lastLogin: "2023-06-15T10:30:00"
-  },
-  {
-    id: "user-002",
-    name: "Sarah Williams",
-    email: "sarah.williams@example.com",
-    role: "officer" as UserRole,
-    status: "active",
-    lastLogin: "2023-06-14T09:15:00"
-  },
-  {
-    id: "user-003",
-    name: "Michael Brown",
-    email: "michael.brown@example.com",
-    role: "administrator" as UserRole,
-    status: "active",
-    lastLogin: "2023-06-16T14:45:00"
-  },
-  {
-    id: "user-004",
-    name: "Emily Johnson",
-    email: "emily.johnson@example.com",
-    role: "verifier" as UserRole,
-    status: "inactive",
-    lastLogin: "2023-05-20T11:30:00"
-  }
-];
+interface UserListItem {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: "active" | "inactive";
+  lastLogin?: string;
+}
 
 const UsersPage = () => {
-  const { hasRole } = useAuth();
-  const [users, setUsers] = useState(mockUsers);
+  const { user: currentUser, hasRole } = useAuth();
+  const [users, setUsers] = useState<UserListItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    role: "applicant" as UserRole,
-  });
-  const [editingUser, setEditingUser] = useState<null | (typeof mockUsers)[0]>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState<UserListItem | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleAddUser = () => {
-    const userId = `user-${Math.floor(Math.random() * 1000)}`;
-    
-    setUsers([
-      ...users,
-      {
-        id: userId,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        status: "active",
-        lastLogin: "-"
-      }
-    ]);
-    
-    setNewUser({
-      name: "",
-      email: "",
-      role: "applicant",
-    });
-    
-    setIsAddUserOpen(false);
-    
-    toast({
-      title: "User added",
-      description: `${newUser.name} has been added as a ${newUser.role}.`,
-    });
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch profiles and join with roles
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          user_roles (
+            role
+          ),
+          auth.users!inner (
+            email,
+            last_sign_in_at
+          )
+        `);
+
+      if (error) throw error;
+
+      // Transform data
+      const formattedUsers = data.map(item => ({
+        id: item.id,
+        name: `${item.first_name || ''} ${item.last_name || ''}`.trim(),
+        email: item['auth.users'].email,
+        role: item.user_roles ? item.user_roles.role as UserRole : 'applicant',
+        status: 'active' as const,
+        lastLogin: item['auth.users'].last_sign_in_at || '-'
+      }));
+
+      setUsers(formattedUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load users",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleUpdateUser = () => {
+  const handleUpdateUser = async () => {
     if (!editingUser) return;
     
-    setUsers(users.map(user => 
-      user.id === editingUser.id ? editingUser : user
-    ));
+    setIsUpdating(true);
     
-    setEditingUser(null);
-    
-    toast({
-      title: "User updated",
-      description: `${editingUser.name}'s information has been updated.`,
-    });
+    try {
+      // Update the user role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: editingUser.id,
+          role: editingUser.role
+        });
+        
+      if (roleError) throw roleError;
+      
+      // Update user status if needed
+      // This would require an additional table or column in profiles
+      
+      toast({
+        title: "User updated",
+        description: `${editingUser.name}'s information has been updated.`,
+      });
+      
+      // Refresh user list
+      fetchUsers();
+      
+      // Close dialog
+      setEditingUser(null);
+    } catch (error) {
+      console.error("Failed to update user:", error);
+      toast({
+        title: "Update Failed",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleDeleteUser = (id: string) => {
-    setUsers(users.filter(user => user.id !== id));
-    
-    toast({
-      title: "User deleted",
-      description: "The user has been deleted successfully.",
-      variant: "destructive"
-    });
+  const handleDeactivateUser = async (id: string) => {
+    // In a real application, this might set a status field or use Supabase auth admin APIs
+    // For this demo, we'll just remove the user from the list
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .update({ role: 'applicant' })
+        .eq('user_id', id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "User deactivated",
+        description: "The user's privileges have been revoked.",
+        variant: "default"
+      });
+      
+      // Refresh the user list
+      fetchUsers();
+    } catch (error) {
+      console.error("Failed to deactivate user:", error);
+      toast({
+        title: "Operation Failed",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
+    }
   };
 
   const filteredUsers = users.filter(user => 
@@ -166,71 +201,11 @@ const UsersPage = () => {
                 className="w-64 pl-8"
               />
             </div>
-            <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add User
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New User</DialogTitle>
-                  <DialogDescription>
-                    Create a new user account. The user will receive an email with instructions to set their password.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={newUser.name}
-                      onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="email" className="text-right">
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={newUser.email}
-                      onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="role" className="text-right">
-                      Role
-                    </Label>
-                    <Select 
-                      value={newUser.role} 
-                      onValueChange={(value) => 
-                        setNewUser({...newUser, role: value as UserRole})
-                      }
-                    >
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="administrator">Administrator</SelectItem>
-                        <SelectItem value="officer">Officer</SelectItem>
-                        <SelectItem value="verifier">Verifier</SelectItem>
-                        <SelectItem value="applicant">Applicant</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" onClick={handleAddUser}>Create User</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button variant="outline" onClick={fetchUsers}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <ManageUsersComponent />
           </div>
         </div>
 
@@ -239,142 +214,143 @@ const UsersPage = () => {
             <CardTitle>System Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableCaption>A list of all system users</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Login</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell className="capitalize">{user.role}</TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={user.status === "active" ? "default" : "secondary"}
-                      >
-                        {user.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {typeof user.lastLogin === "string" && user.lastLogin !== "-" 
-                        ? new Date(user.lastLogin).toLocaleString() 
-                        : user.lastLogin}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Dialog open={editingUser?.id === user.id} onOpenChange={(open) => {
-                          if (!open) setEditingUser(null);
-                        }}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setEditingUser(user)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Edit User</DialogTitle>
-                              <DialogDescription>
-                                Update user information and permissions.
-                              </DialogDescription>
-                            </DialogHeader>
-                            {editingUser && (
-                              <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="edit-name" className="text-right">
-                                    Name
-                                  </Label>
-                                  <Input
-                                    id="edit-name"
-                                    value={editingUser.name}
-                                    onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                                    className="col-span-3"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="edit-email" className="text-right">
-                                    Email
-                                  </Label>
-                                  <Input
-                                    id="edit-email"
-                                    type="email"
-                                    value={editingUser.email}
-                                    onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                                    className="col-span-3"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="edit-role" className="text-right">
-                                    Role
-                                  </Label>
-                                  <Select 
-                                    value={editingUser.role} 
-                                    onValueChange={(value) => 
-                                      setEditingUser({...editingUser, role: value as UserRole})
-                                    }
-                                  >
-                                    <SelectTrigger className="col-span-3">
-                                      <SelectValue placeholder="Select a role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="administrator">Administrator</SelectItem>
-                                      <SelectItem value="officer">Officer</SelectItem>
-                                      <SelectItem value="verifier">Verifier</SelectItem>
-                                      <SelectItem value="applicant">Applicant</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="edit-status" className="text-right">
-                                    Status
-                                  </Label>
-                                  <Select 
-                                    value={editingUser.status} 
-                                    onValueChange={(value) => 
-                                      setEditingUser({...editingUser, status: value})
-                                    }
-                                  >
-                                    <SelectTrigger className="col-span-3">
-                                      <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="active">Active</SelectItem>
-                                      <SelectItem value="inactive">Inactive</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-                            )}
-                            <DialogFooter>
-                              <Button type="submit" onClick={handleUpdateUser}>Update User</Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex justify-center p-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-police-dark"></div>
+              </div>
+            ) : (
+              <Table>
+                <TableCaption>A list of all system users</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last Login</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        No users found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell className="capitalize">{user.role}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={user.status === "active" ? "default" : "secondary"}
+                          >
+                            {user.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {typeof user.lastLogin === "string" && user.lastLogin !== "-" 
+                            ? new Date(user.lastLogin).toLocaleString() 
+                            : user.lastLogin}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Dialog open={editingUser?.id === user.id} onOpenChange={(open) => {
+                              if (!open) setEditingUser(null);
+                            }}>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setEditingUser(user)}
+                                disabled={user.id === currentUser?.id}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              {editingUser && (
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Edit User</DialogTitle>
+                                    <DialogDescription>
+                                      Update user information and permissions.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="grid gap-4 py-4">
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label htmlFor="edit-name" className="text-right">
+                                        Name
+                                      </Label>
+                                      <Input
+                                        id="edit-name"
+                                        value={editingUser.name}
+                                        readOnly
+                                        className="col-span-3 bg-gray-50"
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label htmlFor="edit-email" className="text-right">
+                                        Email
+                                      </Label>
+                                      <Input
+                                        id="edit-email"
+                                        type="email"
+                                        value={editingUser.email}
+                                        readOnly
+                                        className="col-span-3 bg-gray-50"
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label htmlFor="edit-role" className="text-right">
+                                        Role
+                                      </Label>
+                                      <Select 
+                                        value={editingUser.role} 
+                                        onValueChange={(value) => 
+                                          setEditingUser({...editingUser, role: value as UserRole})
+                                        }
+                                      >
+                                        <SelectTrigger className="col-span-3">
+                                          <SelectValue placeholder="Select a role" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="administrator">Administrator</SelectItem>
+                                          <SelectItem value="officer">Officer</SelectItem>
+                                          <SelectItem value="verifier">Verifier</SelectItem>
+                                          <SelectItem value="applicant">Applicant</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  <DialogFooter>
+                                    <Button 
+                                      type="submit" 
+                                      onClick={handleUpdateUser}
+                                      disabled={isUpdating}
+                                    >
+                                      {isUpdating ? "Updating..." : "Update User"}
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              )}
+                            </Dialog>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={() => handleDeactivateUser(user.id)}
+                              disabled={user.id === currentUser?.id || user.role === 'applicant'}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
