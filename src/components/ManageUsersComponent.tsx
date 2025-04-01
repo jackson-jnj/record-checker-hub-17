@@ -73,8 +73,18 @@ const ManageUsersComponent: React.FC<ManageUsersComponentProps> = ({ className }
       
       // Close dialog
       setIsDialogOpen(false);
+      
+      toast({
+        title: "Success",
+        description: `${formData.firstName} ${formData.lastName} has been added as a ${formData.role}.`,
+      });
     } catch (error) {
       console.error("Failed to create user:", error);
+      toast({
+        title: "Error",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }

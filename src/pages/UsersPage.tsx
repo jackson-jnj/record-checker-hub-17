@@ -60,7 +60,7 @@ const UsersPage = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Fetch profiles and join with roles
+      // Query profiles directly and join with user_roles
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -69,31 +69,41 @@ const UsersPage = () => {
           last_name,
           user_roles (
             role
-          ),
-          auth.users!inner (
-            email,
-            last_sign_in_at
           )
         `);
 
       if (error) throw error;
 
-      // Transform data
-      const formattedUsers = data.map(item => ({
-        id: item.id,
-        name: `${item.first_name || ''} ${item.last_name || ''}`.trim(),
-        email: item['auth.users'].email,
-        role: item.user_roles ? item.user_roles.role as UserRole : 'applicant',
-        status: 'active' as const,
-        lastLogin: item['auth.users'].last_sign_in_at || '-'
-      }));
+      // Separately fetch email addresses from auth.users using admin API
+      const usersWithEmails: UserListItem[] = [];
+      
+      for (const profile of data) {
+        try {
+          // Get user details from auth.users using admin API or fetch from session
+          // Note: This is a workaround since we can't directly query auth.users
+          const { data: authUserData } = await supabase.auth.admin.getUserById(profile.id);
+          
+          if (authUserData?.user) {
+            usersWithEmails.push({
+              id: profile.id,
+              name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+              email: authUserData.user.email || '',
+              role: profile.user_roles?.role as UserRole || 'applicant',
+              status: 'active',
+              lastLogin: authUserData.user.last_sign_in_at || '-'
+            });
+          }
+        } catch (error) {
+          console.error(`Error fetching user email for ${profile.id}:`, error);
+        }
+      }
 
-      setUsers(formattedUsers);
+      setUsers(usersWithEmails);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({
         title: "Error",
-        description: "Failed to load users",
+        description: "Failed to load users. Please try again later.",
         variant: "destructive"
       });
     } finally {
@@ -117,12 +127,9 @@ const UsersPage = () => {
         
       if (roleError) throw roleError;
       
-      // Update user status if needed
-      // This would require an additional table or column in profiles
-      
       toast({
         title: "User updated",
-        description: `${editingUser.name}'s information has been updated.`,
+        description: `${editingUser.name}'s role has been updated to ${editingUser.role}.`,
       });
       
       // Refresh user list
@@ -143,8 +150,6 @@ const UsersPage = () => {
   };
 
   const handleDeactivateUser = async (id: string) => {
-    // In a real application, this might set a status field or use Supabase auth admin APIs
-    // For this demo, we'll just remove the user from the list
     try {
       const { error } = await supabase
         .from('user_roles')

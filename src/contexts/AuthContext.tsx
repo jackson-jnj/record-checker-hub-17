@@ -175,20 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Generate a random password (will be reset on first login)
       const tempPassword = Math.random().toString(36).slice(-8);
       
-      // Create invitation
-      const { data: inviteData, error: inviteError } = await supabase
-        .from('user_invitations')
-        .insert({
-          email: email,
-          role: role,
-          invited_by: user.id,
-          token: crypto.randomUUID()
-        })
-        .select();
-        
-      if (inviteError) throw inviteError;
-      
-      // Create the user account
+      // Create the user account using Supabase admin API
       const { error: signUpError, data } = await supabase.auth.admin.createUser({
         email,
         password: tempPassword,
@@ -214,6 +201,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ]);
           
         if (roleError) throw roleError;
+        
+        // Store the invitation in our custom table
+        // We need to use a custom RPC function since the table is not in the types
+        const { error: inviteError } = await supabase.rpc('create_user_invitation', {
+          user_email: email,
+          user_role: role,
+          inviter_id: user.id,
+          invite_token: crypto.randomUUID()
+        });
+        
+        if (inviteError) {
+          console.error("Error creating invitation record:", inviteError);
+          // Continue even if invitation record fails
+        }
       }
       
       toast({
