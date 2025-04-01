@@ -263,24 +263,24 @@ const LoginPage = () => {
                   <div className="border rounded p-2">
                     <div className="font-semibold">Admin</div>
                     <div>admin@example.com</div>
-                    <div>password</div>
+                    <div>password: password</div>
                   </div>
                   <div className="border rounded p-2">
                     <div className="font-semibold">Applicant</div>
                     <div>applicant@example.com</div>
-                    <div>password</div>
+                    <div>password: password</div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs mt-2">
                   <div className="border rounded p-2">
                     <div className="font-semibold">Officer</div>
                     <div>officer@example.com</div>
-                    <div>password</div>
+                    <div>password: password</div>
                   </div>
                   <div className="border rounded p-2">
                     <div className="font-semibold">Verifier</div>
                     <div>verifier@example.com</div>
-                    <div>password</div>
+                    <div>password: password</div>
                   </div>
                 </div>
               </motion.div>
