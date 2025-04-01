@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -202,8 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         if (roleError) throw roleError;
         
-        // Store the invitation in our custom table
-        // We need to use a custom RPC function since the table is not in the types
+        // Store the invitation in our custom table using RPC
         const { error: inviteError } = await supabase.rpc('create_user_invitation', {
           user_email: email,
           user_role: role,

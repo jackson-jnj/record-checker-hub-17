@@ -308,6 +308,15 @@ export type Database = {
         }
         Returns: string
       }
+      create_user_invitation: {
+        Args: {
+          user_email: string
+          user_role: Database["public"]["Enums"]["user_role"]
+          inviter_id: string
+          invite_token: string
+        }
+        Returns: string
+      }
       determine_role_from_email: {
         Args: {
           email: string
