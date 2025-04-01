@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,13 +38,17 @@ const SessionMonitor: React.FC = () => {
             title: "Session Expiring Soon",
             description: "Your session will expire soon due to inactivity. Please click here to stay logged in.",
             duration: WARNING_BEFORE_TIMEOUT,
-            action: {
-              label: "Keep Session",
-              onClick: () => {
-                refreshSession();
-                resetActivityTimer();
-              }
-            }
+            action: (
+              <button 
+                onClick={() => {
+                  refreshSession();
+                  resetActivityTimer();
+                }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-2 text-xs rounded-md"
+              >
+                Keep Session
+              </button>
+            )
           });
           
           // Set final timeout to logout

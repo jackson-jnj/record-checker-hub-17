@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, firstName: string, lastName: string, nrc?: string) => Promise<void>;
   logout: () => void;
+  refreshSession: () => Promise<void>;
   isAuthenticated: boolean;
   hasRole: (role: UserRole | UserRole[]) => boolean;
 }
@@ -21,9 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   
-  // Set up auth state listener and check for existing session
   useEffect(() => {
-    // Check for session in localStorage
     const storedUser = localStorage.getItem('demo_user');
     if (storedUser) {
       try {
@@ -37,12 +35,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
         if (session?.user) {
-          // Use setTimeout to avoid potential deadlock
           setTimeout(() => {
             fetchUserProfile(session.user.id);
           }, 0);
@@ -53,7 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Existing session check:", session?.user?.id);
       if (session?.user) {
@@ -74,7 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log("Fetching user profile for:", userId);
-      // Get user profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -86,11 +80,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw profileError;
       }
       
-      // Get user email from auth
       const { data: userData } = await supabase.auth.getUser();
       const userEmail = userData?.user?.email || '';
       
-      // Get user role
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -104,7 +96,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log("User data loaded:", { profile: profileData, role: roleData });
       
-      // Set user with combined data
       setUser({
         id: userId,
         name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
@@ -114,7 +105,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      // If we can't fetch the profile, log the user out
       logout();
     } finally {
       setLoading(false);
@@ -124,28 +114,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Check if this is a demo account
       const demoUser = mockUsers.find(user => user.email === email.toLowerCase() && password === 'password');
       
       if (demoUser) {
-        // Handle demo login
         console.log("Logging in with demo account:", demoUser);
-        
-        // Store the user in localStorage for persistence
         localStorage.setItem('demo_user', JSON.stringify(demoUser));
-        
-        // Set the user in context
         setUser(demoUser);
-        
         toast({
           title: 'Demo Login Successful',
           description: `Welcome, ${demoUser.name}!`,
         });
-        
         return;
       }
       
-      // Real authentication with Supabase
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -175,7 +156,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string, firstName: string, lastName: string, nrc?: string) => {
     setLoading(true);
     try {
-      // Sign up with Supabase Auth
       const { error: signUpError, data } = await supabase.auth.signUp({
         email,
         password,
@@ -211,7 +191,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const logout = async () => {
     try {
-      // Check if using a demo account
       const storedUser = localStorage.getItem('demo_user');
       if (storedUser) {
         localStorage.removeItem('demo_user');
@@ -223,7 +202,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Regular logout via Supabase
       await supabase.auth.signOut();
       setUser(null);
       toast({
@@ -234,6 +212,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error during logout:', error);
       toast({
         title: 'Logout Failed',
+        description: (error as Error).message,
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const refreshSession = async () => {
+    try {
+      const storedUser = localStorage.getItem('demo_user');
+      if (storedUser) {
+        console.log("Refreshing demo user session");
+        return;
+      }
+      
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.error("Error refreshing session:", error);
+        throw error;
+      }
+      
+      console.log("Session refreshed successfully");
+    } catch (error) {
+      console.error("Failed to refresh session:", error);
+      toast({
+        title: 'Session Refresh Failed',
         description: (error as Error).message,
         variant: 'destructive',
       });
@@ -256,6 +260,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         signup,
         logout,
+        refreshSession,
         isAuthenticated: !!user,
         hasRole
       }}

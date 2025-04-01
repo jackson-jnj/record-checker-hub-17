@@ -14,8 +14,9 @@ export const logUserAction = async (
   newData?: any
 ) => {
   try {
-    const { auth } = useAuth();
-    const userId = auth?.user?.id;
+    const auth = supabase.auth.getUser();
+    const userResponse = await auth;
+    const userId = userResponse.data.user?.id;
     
     if (!userId) {
       debug.warn("auditUtils", "Attempted to log action without user ID", { action, tableName, recordId });
