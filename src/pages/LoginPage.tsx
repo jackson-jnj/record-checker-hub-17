@@ -139,6 +139,14 @@ const LoginPage = () => {
     }
   };
 
+  // Demo credentials with more information
+  const demoCredentials = [
+    { role: "Admin", email: "jnjovu51@gmail.com", password: "12345678", description: "Full system access" },
+    { role: "Applicant", email: "applicant@example.com", password: "password", description: "Can submit applications" },
+    { role: "Officer", email: "officer@example.com", password: "password", description: "Can process applications" },
+    { role: "Verifier", email: "verifier@example.com", password: "password", description: "Can verify applications" }
+  ];
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-police-dark to-police-medium py-12 px-4 sm:px-6 lg:px-8">
       <motion.div 
@@ -255,34 +263,29 @@ const LoginPage = () => {
               </motion.div>
               
               <motion.div 
-                className="text-center text-sm"
+                className="text-center mt-6"
                 variants={itemVariants}
               >
-                <p className="text-gray-500">
-                  Demo credentials:
+                <p className="text-gray-700 font-semibold mb-2">
+                  Demo Credentials
                 </p>
-                <div className="grid grid-cols-2 gap-2 text-xs mt-1">
-                  <div className="border rounded p-2">
-                    <div className="font-semibold">Admin</div>
-                    <div>jnjovu51@gmail.com</div>
-                    <div>12345678</div>
-                  </div>
-                  <div className="border rounded p-2">
-                    <div className="font-semibold">Applicant</div>
-                    <div>applicant@example.com</div>
-                    <div>password</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                  <div className="border rounded p-2">
-                    <div className="font-semibold">Officer</div>
-                    <div>officer@example.com</div>
-                    <div>password</div>
-                  </div>
-                  <div className="border rounded p-2">
-                    <div className="font-semibold">Verifier</div>
-                    <div>verifier@example.com</div>
-                    <div>password</div>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <div className="grid grid-cols-1 gap-4">
+                    {demoCredentials.map((cred, index) => (
+                      <div 
+                        key={index} 
+                        className="border rounded p-3 bg-white hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => {
+                          setEmail(cred.email);
+                          setPassword(cred.password);
+                        }}
+                      >
+                        <div className="font-semibold text-police-dark">{cred.role}</div>
+                        <div className="text-sm text-gray-600">{cred.email}</div>
+                        <div className="text-sm text-gray-600">Password: {cred.password}</div>
+                        <div className="text-xs text-gray-500 mt-1">{cred.description}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </motion.div>
@@ -359,6 +362,12 @@ const LoginPage = () => {
                       required 
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Role will be determined based on your email: 
+                    <span className="font-medium">@police.gov.zm</span> for officers, 
+                    emails with "admin" for administrators, 
+                    emails with "verifier" for verifiers
+                  </p>
                 </motion.div>
                 
                 <motion.div className="space-y-1" variants={itemVariants}>

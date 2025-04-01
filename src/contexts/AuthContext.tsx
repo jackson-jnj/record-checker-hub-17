@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -173,9 +174,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
+  // Determine user role based on email domain
+  const determineUserRole = (email: string): UserRole => {
+    const lowerEmail = email.toLowerCase();
+    
+    // Check for specific email patterns
+    if (lowerEmail.endsWith('@police.gov.zm')) {
+      return 'officer';
+    } else if (lowerEmail.includes('admin') || lowerEmail.includes('administrator')) {
+      return 'administrator';
+    } else if (lowerEmail.includes('verify') || lowerEmail.includes('verifier')) {
+      return 'verifier';
+    } else {
+      // Default role
+      return 'applicant';
+    }
+  };
+  
   const signup = async (email: string, password: string, firstName: string, lastName: string, nrc?: string) => {
     setLoading(true);
     try {
+      // Determine role based on email
+      const role = determineUserRole(email);
+      
       const { error: signUpError, data } = await supabase.auth.signUp({
         email,
         password,
@@ -184,6 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             first_name: firstName,
             last_name: lastName,
             nrc: nrc || '',
+            role: role, // Include role in metadata
           },
         },
       });
@@ -191,6 +213,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (signUpError) throw signUpError;
       
       console.log("Signup successful, user data:", data);
+      
+      // If user was created successfully and we have their ID
+      if (data.user) {
+        try {
+          // Explicitly set role in user_roles table (this might be redundant with DB trigger but ensures role is set)
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .upsert([
+              { 
+                user_id: data.user.id,
+                role: role
+              }
+            ]);
+            
+          if (roleError) {
+            console.error("Error setting user role:", roleError);
+          }
+        } catch (roleSetError) {
+          console.error("Failed to set user role:", roleSetError);
+        }
+      }
       
       toast({
         title: 'Registration Successful',
