@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -117,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // First check if it's the real admin account
       if (email.toLowerCase() === 'jnjovu51@gmail.com' && password === '12345678') {
-        const adminUser = {
+        const adminUser: User = {
           id: 'real-admin-001',
           name: 'Admin User',
           email: 'jnjovu51@gmail.com',
