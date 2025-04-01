@@ -105,8 +105,6 @@ const LoginPage = () => {
       });
       // Switch to login tab
       setActiveTab("login");
-      // Auto-fill the email field with the newly registered email
-      setEmail(signupEmail);
     } catch (error) {
       setError((error as Error).message || "Signup failed");
     } finally {
@@ -255,16 +253,36 @@ const LoginPage = () => {
               </motion.div>
               
               <motion.div 
-                className="text-center mt-6"
+                className="text-center text-sm"
                 variants={itemVariants}
               >
-                <p className="text-gray-600 text-sm">
-                  New users can create an account with a standard email address. <br/>
-                  Government officials should use their official @police.gov email.
+                <p className="text-gray-500">
+                  Demo credentials:
                 </p>
-                <p className="text-gray-600 text-xs mt-2">
-                  For first-time admin setup: admin@police.gov.com
-                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs mt-1">
+                  <div className="border rounded p-2">
+                    <div className="font-semibold">Admin</div>
+                    <div>admin@example.com</div>
+                    <div>password</div>
+                  </div>
+                  <div className="border rounded p-2">
+                    <div className="font-semibold">Applicant</div>
+                    <div>applicant@example.com</div>
+                    <div>password</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                  <div className="border rounded p-2">
+                    <div className="font-semibold">Officer</div>
+                    <div>officer@example.com</div>
+                    <div>password</div>
+                  </div>
+                  <div className="border rounded p-2">
+                    <div className="font-semibold">Verifier</div>
+                    <div>verifier@example.com</div>
+                    <div>password</div>
+                  </div>
+                </div>
               </motion.div>
             </form>
           </TabsContent>
@@ -339,11 +357,6 @@ const LoginPage = () => {
                       required 
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Role will be determined based on your email: 
-                    <span className="font-medium">@police.gov.com</span> for officers, 
-                    <span className="font-medium">admin@police.gov.com</span> for administrators
-                  </p>
                 </motion.div>
                 
                 <motion.div className="space-y-1" variants={itemVariants}>

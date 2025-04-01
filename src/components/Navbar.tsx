@@ -17,25 +17,15 @@ import { mockNotifications } from "@/data/mockData";
 import { Shield } from "lucide-react";
 import { ScaleIn } from "@/components/animations/ScaleIn";
 import { FadeIn } from "@/components/animations/FadeIn";
-import { useIsMobile, useDeviceType } from "@/hooks/use-mobile";
-import { debug } from "@/utils/debugUtils";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const deviceType = useDeviceType();
   
   const userNotifications = mockNotifications.filter(n => n.userId === user?.id);
   const unreadCount = userNotifications.filter(n => !n.read).length;
-
-  // Set initial sidebar state based on device
-  useEffect(() => {
-    setIsSidebarOpen(!isMobile);
-    debug.log("Navbar", "Device type changed", { deviceType, isMobile, initialSidebarState: !isMobile });
-  }, [isMobile, deviceType]);
 
   // Toggle sidebar and dispatch custom event
   const toggleSidebar = () => {
@@ -46,8 +36,6 @@ const Navbar = () => {
     window.dispatchEvent(new CustomEvent('sidebar-toggle', { 
       detail: { open: newState } 
     }));
-    
-    debug.log("Navbar", "Sidebar toggled", { newState });
   };
 
   const handleLogoClick = () => {
@@ -69,14 +57,14 @@ const Navbar = () => {
 
   return (
     <header className="bg-white border-b border-police-border sticky top-0 z-10">
-      <FadeIn duration={800} className="px-2 sm:px-4 md:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between">
+      <FadeIn duration={800} className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center">
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
             aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-            className="mr-2 text-gray-500 hover:text-gray-600 focus:ring-2 focus:ring-police-medium transition-transform duration-300 ease-in-out"
+            className="mr-2 text-gray-500 hover:text-gray-600 focus:ring-2 focus:ring-police-medium md:hidden transition-transform duration-300 ease-in-out"
           >
             {isSidebarOpen ? (
               <X className="h-5 w-5 animate-in fade-in duration-300" aria-hidden="true" />
@@ -90,8 +78,8 @@ const Navbar = () => {
               onClick={handleLogoClick} 
               className="flex items-center transition-all duration-300 hover:scale-105 relative overflow-hidden group"
             >
-              <Shield className="h-7 w-7 md:h-8 md:w-8 text-police-dark transition-transform duration-500 group-hover:rotate-12" />
-              <span className="ml-2 font-bold text-base md:text-lg text-police-dark hidden sm:block relative">
+              <Shield className="h-8 w-8 text-police-dark transition-transform duration-500 group-hover:rotate-12" />
+              <span className="ml-2 font-bold text-lg text-police-dark hidden md:block relative">
                 Record Check
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-police-medium transition-all duration-300 group-hover:w-full"></span>
               </span>
@@ -100,7 +88,7 @@ const Navbar = () => {
         </div>
         
         <ScaleIn delay={200}>
-          <div className="flex items-center space-x-2 md:space-x-4">
+          <div className="flex items-center space-x-4">
             <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative transition-all duration-300 hover:bg-police-background">
@@ -112,7 +100,7 @@ const Navbar = () => {
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[calc(100vw-40px)] sm:w-80 bg-white">
+              <DropdownMenuContent align="end" className="w-80 bg-white">
                 <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {userNotifications.length === 0 ? (
@@ -150,8 +138,8 @@ const Navbar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-white">
                 <DropdownMenuLabel>
-                  <div className="max-w-[200px] truncate">{user?.name}</div>
-                  <div className="text-xs text-gray-500 max-w-[200px] truncate">{user?.email}</div>
+                  <div>{user?.name}</div>
+                  <div className="text-xs text-gray-500">{user?.email}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="cursor-pointer transition-colors duration-200 hover:bg-police-background">

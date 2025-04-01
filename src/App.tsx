@@ -19,19 +19,9 @@ import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import SessionMonitor from "./components/SessionMonitor";
 import { UserRole } from "./types";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: true,
-      refetchOnReconnect: true,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -39,7 +29,6 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <SessionMonitor />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -71,7 +60,7 @@ const App = () => (
               <Route path=":id" element={<ApplicationDetail />} />
             </Route>
             
-            {/* Verification routes - only for admin, officer and verifier */}
+            {/* Verification routes - only for admin and officer */}
             <Route 
               path="/verification" 
               element={

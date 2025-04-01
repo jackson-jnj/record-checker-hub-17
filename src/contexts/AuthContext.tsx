@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { mockUsers } from '@/data/mockData';
 
 interface AuthContextType {
   user: User | null;
@@ -9,10 +11,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, firstName: string, lastName: string, nrc?: string) => Promise<void>;
   logout: () => void;
-  refreshSession: () => Promise<void>;
   isAuthenticated: boolean;
   hasRole: (role: UserRole | UserRole[]) => boolean;
-  createUser: (email: string, role: UserRole, firstName: string, lastName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,11 +21,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   
+  // Set up auth state listener and check for existing session
   useEffect(() => {
+    // Check for session in localStorage
+    const storedUser = localStorage.getItem('demo_user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+        console.log("Using stored demo user:", JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Error parsing stored user:", e);
+        localStorage.removeItem('demo_user');
+      }
+      setLoading(false);
+      return;
+    }
+
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
         if (session?.user) {
+          // Use setTimeout to avoid potential deadlock
           setTimeout(() => {
             fetchUserProfile(session.user.id);
           }, 0);
@@ -36,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Existing session check:", session?.user?.id);
       if (session?.user) {
@@ -56,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log("Fetching user profile for:", userId);
+      // Get user profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -67,9 +86,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw profileError;
       }
       
+      // Get user email from auth
       const { data: userData } = await supabase.auth.getUser();
       const userEmail = userData?.user?.email || '';
       
+      // Get user role
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -83,6 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log("User data loaded:", { profile: profileData, role: roleData });
       
+      // Set user with combined data
       setUser({
         id: userId,
         name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
@@ -92,6 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      // If we can't fetch the profile, log the user out
       logout();
     } finally {
       setLoading(false);
@@ -101,6 +124,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
+      // Check if this is a demo account
+      const demoUser = mockUsers.find(user => user.email === email.toLowerCase() && password === 'password');
+      
+      if (demoUser) {
+        // Handle demo login
+        console.log("Logging in with demo account:", demoUser);
+        
+        // Store the user in localStorage for persistence
+        localStorage.setItem('demo_user', JSON.stringify(demoUser));
+        
+        // Set the user in context
+        setUser(demoUser);
+        
+        toast({
+          title: 'Demo Login Successful',
+          description: `Welcome, ${demoUser.name}!`,
+        });
+        
+        return;
+      }
+      
+      // Real authentication with Supabase
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -130,6 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string, firstName: string, lastName: string, nrc?: string) => {
     setLoading(true);
     try {
+      // Sign up with Supabase Auth
       const { error: signUpError, data } = await supabase.auth.signUp({
         email,
         password,
@@ -148,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast({
         title: 'Registration Successful',
-        description: 'Your account has been created successfully. You can now log in.',
+        description: 'Your account has been created successfully.',
       });
     } catch (error) {
       console.error("Signup error:", error);
@@ -163,77 +209,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  const createUser = async (email: string, role: UserRole, firstName: string, lastName: string) => {
-    setLoading(true);
-    try {
-      // Check if current user is an admin
-      if (!user || user.role !== 'administrator') {
-        throw new Error('Only administrators can create users');
-      }
-      
-      // Generate a random password (will be reset on first login)
-      const tempPassword = Math.random().toString(36).slice(-8);
-      
-      // Create the user account using Supabase admin API
-      const { error: signUpError, data } = await supabase.auth.admin.createUser({
-        email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: {
-          first_name: firstName,
-          last_name: lastName,
-          role: role
-        }
-      });
-      
-      if (signUpError) throw signUpError;
-      
-      // Explicitly set the role (overriding the email-based detection)
-      if (data.user) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .upsert([
-            { 
-              user_id: data.user.id,
-              role: role
-            }
-          ]);
-          
-        if (roleError) throw roleError;
-        
-        // Store the invitation in our custom table using RPC
-        const { error: inviteError } = await supabase.rpc('create_user_invitation', {
-          user_email: email,
-          user_role: role,
-          inviter_id: user.id,
-          invite_token: crypto.randomUUID()
-        });
-        
-        if (inviteError) {
-          console.error("Error creating invitation record:", inviteError);
-          // Continue even if invitation record fails
-        }
-      }
-      
-      toast({
-        title: 'User Created Successfully',
-        description: `${firstName} ${lastName} has been added as a ${role}.`,
-      });
-    } catch (error) {
-      console.error("Error creating user:", error);
-      toast({
-        title: 'Failed to Create User',
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   const logout = async () => {
     try {
+      // Check if using a demo account
+      const storedUser = localStorage.getItem('demo_user');
+      if (storedUser) {
+        localStorage.removeItem('demo_user');
+        setUser(null);
+        toast({
+          title: 'Demo Logout',
+          description: 'You have been logged out from the demo account.',
+        });
+        return;
+      }
+      
+      // Regular logout via Supabase
       await supabase.auth.signOut();
       setUser(null);
       toast({
@@ -244,26 +234,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error during logout:', error);
       toast({
         title: 'Logout Failed',
-        description: (error as Error).message,
-        variant: 'destructive',
-      });
-    }
-  };
-  
-  const refreshSession = async () => {
-    try {
-      const { data, error } = await supabase.auth.refreshSession();
-      
-      if (error) {
-        console.error("Error refreshing session:", error);
-        throw error;
-      }
-      
-      console.log("Session refreshed successfully");
-    } catch (error) {
-      console.error("Failed to refresh session:", error);
-      toast({
-        title: 'Session Refresh Failed',
         description: (error as Error).message,
         variant: 'destructive',
       });
@@ -286,10 +256,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         signup,
         logout,
-        refreshSession,
         isAuthenticated: !!user,
-        hasRole,
-        createUser
+        hasRole
       }}
     >
       {children}
