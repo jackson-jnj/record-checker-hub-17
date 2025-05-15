@@ -19,14 +19,12 @@ import { ScaleIn } from "@/components/animations/ScaleIn";
 import { FadeIn } from "@/components/animations/FadeIn";
 
 const Navbar = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
   
-  // Get mock data for notifications
-  const mockUser = mockNotifications[0]?.userId || '';
-  const userNotifications = mockNotifications.filter(n => n.userId === mockUser);
+  const userNotifications = mockNotifications.filter(n => n.userId === user?.id);
   const unreadCount = userNotifications.filter(n => !n.read).length;
 
   // Toggle sidebar and dispatch custom event
@@ -133,22 +131,22 @@ const Navbar = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full overflow-hidden transition-transform duration-300 hover:scale-110">
                   <Avatar>
-                    <AvatarImage src="/placeholder.svg" alt="User" className="object-cover" />
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarImage src={user?.avatar} alt={user?.name} className="object-cover" />
+                    <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-white">
                 <DropdownMenuLabel>
-                  <div>User</div>
-                  <div className="text-xs text-gray-500">user@example.com</div>
+                  <div>{user?.name}</div>
+                  <div className="text-xs text-gray-500">{user?.email}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="cursor-pointer transition-colors duration-200 hover:bg-police-background">
                   <Link to="/profile">Profile</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="cursor-pointer transition-colors duration-200 hover:bg-police-background">
-                  <Link to="/login">Login</Link>
+                <DropdownMenuItem onClick={logout} className="cursor-pointer transition-colors duration-200 hover:bg-police-background">
+                  Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
