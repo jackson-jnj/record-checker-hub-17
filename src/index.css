@@ -86,6 +86,20 @@
   }
 }
 
+@layer utilities {
+  /* Add custom scale utility inside the utilities layer */
+  .scale-102 {
+    --tw-scale-x: 1.02;
+    --tw-scale-y: 1.02;
+    transform: translate(var(--tw-translate-x), var(--tw-translate-y)) 
+               rotate(var(--tw-rotate)) 
+               skewX(var(--tw-skew-x)) 
+               skewY(var(--tw-skew-y)) 
+               scaleX(var(--tw-scale-x)) 
+               scaleY(var(--tw-scale-y));
+  }
+}
+
 @layer components {
   .app-container {
     @apply flex min-h-screen w-full;
@@ -104,7 +118,8 @@
   }
   
   .stat-card {
-    @apply card-container hover:shadow-md transform transition-all duration-300 hover:scale-102;
+    @apply card-container hover:shadow-md transform transition-all duration-300;
+    @apply hover:scale-102; /* Now properly using the custom scale utility */
   }
   
   .form-group {
@@ -141,7 +156,8 @@
   }
   
   .hover-grow {
-    @apply transition-all duration-300 ease-in-out hover:scale-102;
+    @apply transition-all duration-300 ease-in-out;
+    @apply hover:scale-102; /* Now properly using the custom scale utility */
   }
   
   .hover-pulse {
@@ -184,11 +200,4 @@
       @apply text-xl;
     }
   }
-}
-
-/* New scale utility */
-.scale-102 {
-  --tw-scale-x: 1.02;
-  --tw-scale-y: 1.02;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
