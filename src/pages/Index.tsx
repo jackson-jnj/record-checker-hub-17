@@ -46,7 +46,7 @@ const Index = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            A secure and streamlined system for managing police record check applications.
+            A secure and streamlined system for tracking and managing police record check applications.
           </motion.p>
           <motion.div 
             className="mt-10 flex justify-center gap-3"
