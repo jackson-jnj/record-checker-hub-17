@@ -1,12 +1,12 @@
 
 # Police Record Check System zambia .
 contributors.
-Marcus Chongwani.
-Roy Kamwanza.
-Elijah Nyameni.
-martin sichimaata
-damian.
-Jackson Njovu.
+-Marcus Chongwani.
+-Roy Kamwanza.
+-Elijah Nyameni.
+-martin sichimaata
+-damian.
+-Jackson Njovu.
 
 
 
