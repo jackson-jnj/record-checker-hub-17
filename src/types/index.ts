@@ -1,4 +1,3 @@
-
 export type UserRole = 'administrator' | 'officer' | 'applicant' | 'verifier';
 
 export interface User {
@@ -11,7 +10,7 @@ export interface User {
   lastLogin?: string;
 }
 
-export type ApplicationStatus = 'pending' | 'processing' | 'approved' | 'rejected';
+export type ApplicationStatus = 'pending' | 'processing' | 'approved' | 'rejected' | 'submitted' | 'pending_verification' | 'verified' | 'invalid' | 'under_review';
 
 export interface Application {
   id: string;

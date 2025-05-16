@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Application, ApplicationStatus } from "@/types";
 import { debug } from "@/utils/debugUtils";
@@ -128,7 +127,7 @@ export const createApplication = async (application: Partial<Application>): Prom
         reference_number: refNumber,
         applicant_id: application.applicantId,
         type: application.applicationType,
-        status: 'submitted',
+        status: 'pending' as ApplicationStatus, // Fixed: Use a valid enum value from ApplicationStatus
         purpose: application.notes,
         applicant_name: application.applicantName,
         priority: application.priority

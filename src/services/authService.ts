@@ -10,11 +10,16 @@ export const getCurrentUser = async (): Promise<User | null> => {
       return null;
     }
     
-    const { data: profile } = await supabase
+    // Updated query to handle possible missing avatar_url column
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('first_name, last_name, avatar_url')
+      .select('first_name, last_name')
       .eq('id', authData.session.user.id)
       .single();
+    
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+    }
     
     const { data: roleData } = await supabase
       .from('user_roles')
@@ -34,7 +39,6 @@ export const getCurrentUser = async (): Promise<User | null> => {
       name,
       email: authData.session.user.email || '',
       role,
-      avatar: profile?.avatar_url,
       status: 'active',
       lastLogin: new Date(authData.session.user.last_sign_in_at || '').toISOString()
     };
