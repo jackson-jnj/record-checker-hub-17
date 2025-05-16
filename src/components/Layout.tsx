@@ -1,12 +1,28 @@
 
-import { Outlet } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import { useAuth } from "@/contexts/AuthContext";
 import { FadeIn } from "@/components/animations/FadeIn";
+import { useUserSync } from "@/hooks/useUserSync";
+import { useToast } from "@/hooks/use-toast";
 
 const Layout = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Sync user session with Supabase
+  useUserSync();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   // Listen for sidebar toggle events
   useEffect(() => {
