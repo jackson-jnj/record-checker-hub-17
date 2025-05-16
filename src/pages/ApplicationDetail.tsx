@@ -165,15 +165,15 @@ const ApplicationDetail = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Email</p>
-                        <p>jane.applicant@example.com</p>
+                        <p>Roy.applicant@example.com</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Phone</p>
-                        <p>(555) 123-4567</p>
+                        <p>+260 97702711</p>
                       </div>
                       <div className="md:col-span-2">
                         <p className="text-sm text-gray-500">Address</p>
-                        <p>123 Main Street, Anytown, CA 90210</p>
+                        <p>123 Main Street, lusaka 90210</p>
                       </div>
                     </div>
                   </div>
@@ -491,14 +491,14 @@ const ApplicationDetail = () => {
                 </div>
                 <div className="ml-4">
                   <p className="font-medium">{application.applicantName}</p>
-                  <p className="text-sm text-gray-500">jane.applicant@example.com</p>
+                  <p className="text-sm text-gray-500">Roy.applicant@example.com</p>
                 </div>
               </div>
               
               <div className="space-y-2">
                 <div className="flex items-center">
                   <User className="h-4 w-4 text-gray-400 mr-2" />
-                  <span className="text-sm">(555) 123-4567</span>
+                  <span className="text-sm">+260 977502711</span>
                 </div>
                 <div className="flex items-center">
                   <FileText className="h-4 w-4 text-gray-400 mr-2" />
