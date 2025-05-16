@@ -315,7 +315,7 @@ const LoginPage = () => {
                         name="firstName" 
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="Jack" 
+                        placeholder="Jackson" 
                         className="pl-10"
                         required
                       />
