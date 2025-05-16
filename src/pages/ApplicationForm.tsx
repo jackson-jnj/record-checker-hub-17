@@ -228,7 +228,7 @@ const ApplicationForm = () => {
                       <strong>Processing time:</strong> 5-7 business days
                     </p>
                     <p className="text-sm text-gray-600">
-                      <strong>Fee:</strong> $25.00
+                      <strong>Fee:</strong> k300.00
                     </p>
                   </AccordionContent>
                 </AccordionItem>
@@ -243,7 +243,7 @@ const ApplicationForm = () => {
                       <strong>Processing time:</strong> 7-10 business days
                     </p>
                     <p className="text-sm text-gray-600">
-                      <strong>Fee:</strong> $35.00
+                      <strong>Fee:</strong> k450.00
                     </p>
                   </AccordionContent>
                 </AccordionItem>
@@ -258,7 +258,7 @@ const ApplicationForm = () => {
                       <strong>Processing time:</strong> 10-15 business days
                     </p>
                     <p className="text-sm text-gray-600">
-                      <strong>Fee:</strong> $50.00
+                      <strong>Fee:</strong> k550.00
                     </p>
                   </AccordionContent>
                 </AccordionItem>
@@ -407,7 +407,6 @@ const ApplicationForm = () => {
                       <SelectItem value="passport">Passport</SelectItem>
                       <SelectItem value="driver_license">Driver's License</SelectItem>
                       <SelectItem value="nrc">NRC</SelectItem>
-                      <SelectItem value="state_id">State ID</SelectItem>
                       <SelectItem value="other">Other Government ID</SelectItem>
                     </SelectContent>
                   </Select>
