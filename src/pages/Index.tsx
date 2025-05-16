@@ -38,7 +38,7 @@ const Index = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            Police Record Check
+            Police Record Check GRZ
           </motion.h1>
           <motion.p 
             className="mt-6 max-w-2xl mx-auto text-xl text-white/80"
