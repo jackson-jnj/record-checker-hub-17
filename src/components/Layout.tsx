@@ -5,11 +5,17 @@ import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { useAuth } from "@/contexts/AuthContext";
 import { FadeIn } from "@/components/animations/FadeIn";
+import { useUserSync } from "@/hooks/useUserSync";
+import { useToast } from "@/hooks/use-toast";
 
 const Layout = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Sync user session with Supabase
+  useUserSync();
 
   // Redirect to login if not authenticated
   useEffect(() => {
