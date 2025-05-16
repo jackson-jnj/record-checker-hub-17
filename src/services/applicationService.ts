@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Application, ApplicationStatus } from "@/types";
 import { debug } from "@/utils/debugUtils";
@@ -121,13 +122,16 @@ export const createApplication = async (application: Partial<Application>): Prom
     // Generate reference number from backend or add a placeholder
     const refNumber = application.referenceNumber || 'PRC-PENDING';
     
+    // Fixed: Use 'pending' status which is valid in Supabase's enum
+    // Even though our ApplicationStatus type includes more options,
+    // we need to use one of the values Supabase accepts
     const { data, error } = await supabase
       .from('applications')
       .insert({
         reference_number: refNumber,
         applicant_id: application.applicantId,
         type: application.applicationType,
-        status: 'pending' as ApplicationStatus, // Fixed: Use a valid enum value from ApplicationStatus
+        status: 'pending', // Using 'pending' instead of 'submitted' to match Supabase's enum
         purpose: application.notes,
         applicant_name: application.applicantName,
         priority: application.priority
