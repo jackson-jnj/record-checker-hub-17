@@ -315,7 +315,7 @@ const LoginPage = () => {
                         name="firstName" 
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="John" 
+                        placeholder="Jack" 
                         className="pl-10"
                         required
                       />
@@ -332,7 +332,7 @@ const LoginPage = () => {
                         name="lastName" 
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Doe" 
+                        placeholder="njovu" 
                         className="pl-10"
                         required
                       />
@@ -448,7 +448,7 @@ const LoginPage = () => {
           variants={itemVariants}
         >
           <p className="text-gray-600">
-            By using this service, you agree to our{" "}
+            By using this service, you agree to our GRZ{" "}
             <a href="#" className="font-medium text-police-accent hover:text-police-accent/80">
               Terms of Service
             </a>{" "}
