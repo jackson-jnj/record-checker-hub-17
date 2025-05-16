@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,7 +17,6 @@ import UsersPage from "./pages/UsersPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import Layout from "./components/Layout";
-import ProtectedRoute from "./components/ProtectedRoute";
 import { UserRole } from "./types";
 
 const queryClient = new QueryClient();
@@ -34,87 +32,38 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
             
-            {/* Dashboard accessible to all authenticated users */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
+            {/* Dashboard and other pages */}
+            <Route path="/dashboard" element={<Layout />}>
               <Route index element={<Dashboard />} />
             </Route>
             
             {/* Applications routes */}
-            <Route 
-              path="/applications" 
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
+            <Route path="/applications" element={<Layout />}>
               <Route index element={<ApplicationsPage />} />
               <Route path="new" element={<ApplicationForm />} />
               <Route path=":id" element={<ApplicationDetail />} />
             </Route>
             
-            {/* Verification routes - only for admin and officer */}
-            <Route 
-              path="/verification" 
-              element={
-                <ProtectedRoute allowedRoles={["administrator", "officer", "verifier"] as UserRole[]}>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
+            {/* Verification routes */}
+            <Route path="/verification" element={<Layout />}>
               <Route index element={<VerificationPage />} />
             </Route>
             
             {/* Admin routes */}
-            <Route 
-              path="/users" 
-              element={
-                <ProtectedRoute allowedRoles={["administrator"] as UserRole[]}>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
+            <Route path="/users" element={<Layout />}>
               <Route index element={<UsersPage />} />
             </Route>
             
-            <Route 
-              path="/reports" 
-              element={
-                <ProtectedRoute allowedRoles={["administrator"] as UserRole[]}>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
+            <Route path="/reports" element={<Layout />}>
               <Route index element={<ReportsPage />} />
             </Route>
             
-            <Route 
-              path="/settings" 
-              element={
-                <ProtectedRoute allowedRoles={["administrator"] as UserRole[]}>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
+            <Route path="/settings" element={<Layout />}>
               <Route index element={<SettingsPage />} />
             </Route>
             
-            {/* Profile accessible to all authenticated users */}
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
+            {/* Profile page */}
+            <Route path="/profile" element={<Layout />}>
               <Route index element={<Profile />} />
             </Route>
 
